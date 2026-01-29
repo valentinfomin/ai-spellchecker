@@ -10,24 +10,6 @@ const replaceBtn = document.getElementById("replaceBtn");
 
 let engine = null;
 let lastResult = ""; // Store the last generated text
-let currentStyle = "grammar"; // Default style
-
-// Style Button Logic
-document.querySelectorAll('.style-btn').forEach(btn => {
-    btn.onclick = () => {
-        // Reset all buttons
-        document.querySelectorAll('.style-btn').forEach(b => {
-            b.classList.remove('selected');
-            b.style.background = '#ddd';
-            b.style.color = 'black';
-        });
-        // Select clicked button
-        btn.classList.add('selected');
-        btn.style.background = '#007bff';
-        btn.style.color = 'white';
-        currentStyle = btn.getAttribute('data-value');
-    };
-});
 
 async function getDownloadedModels() {
     return JSON.parse(localStorage.getItem("downloaded_params") || "[]");
@@ -73,7 +55,7 @@ async function initApp() {
 async function loadModel() {
     // Check for WebGPU support first
     if (!navigator.gpu) {
-        status.innerHTML = "❌ WebGPU is not supported in this browser.<br>Try updating Chrome or checking 'chrome://gpu'.";
+        status.innerHTML = "❌ WebGPU is not supported.";
         return;
     }
 
@@ -101,9 +83,17 @@ async function loadModel() {
             localStorage.setItem("downloaded_params", JSON.stringify(downloaded));
         }
         status.innerText = `✅ Ready`;
-        runBtn.innerText = "Fix Text";
-        runBtn.onclick = generateText;
-        runBtn.disabled = false;
+        runBtn.style.display = "none"; // Hide button after loading
+        
+        // Auto-trigger when typing
+        let debounceTimer;
+        promptInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if (engine) generateText();
+            }, 800);
+        });
+
         checkStoredText();
     } catch (e) {
         console.error("Load Model Error:", e);
@@ -111,24 +101,8 @@ async function loadModel() {
         runBtn.disabled = false;
         
         let errorMsg = e.message;
-        if (errorMsg.includes("Instance reference")) errorMsg = "WebGPU Context Lost.";
-
-        status.innerHTML = `❌ ${errorMsg} <br>
-            <button id="retryLoadBtn" style="margin:5px 0; padding:4px 8px;">Reload Panel</button>
-            <button id="hardResetBtn" style="margin:5px 0; padding:4px 8px; background:#f88; border:1px solid #c00;">Hard Reset</button>`;
-        
-        setTimeout(() => {
-            document.getElementById("retryLoadBtn").onclick = () => location.reload();
-            document.getElementById("hardResetBtn").onclick = async () => {
-                if (confirm("This will delete all downloaded models and reset the extension. Continue?")) {
-                    localStorage.clear();
-                    // Try to clear Cache API (where models are stored)
-                    const keys = await caches.keys();
-                    for (const key of keys) await caches.delete(key);
-                    location.reload();
-                }
-            };
-        }, 0);
+        if (errorMsg.includes("Instance reference")) errorMsg = "WebGPU Context Lost. Reload panel.";
+        status.innerText = `❌ ${errorMsg}`;
     }
 }
 
@@ -141,32 +115,16 @@ async function generateText() {
     output.style.display = "block";
     output.innerText = "Analyzing...";
 
-    // Determine System Prompt based on Style
-    const style = currentStyle;
-    let systemPrompt = "You are a professional editor. Output ONLY the corrected text.";
-    let userPrompt = `Correct the grammar and tenses in this text:\n\n${text}`;
-
-    if (style === "formal") {
-        systemPrompt = "You are a professional business editor. Rewrite the text to be more formal, professional, and polite. Keep the core meaning. Output ONLY the rewritten text.";
-        userPrompt = `Rewrite this text to be formal:\n\n${text}`;
-    } else if (style === "friendly") {
-        systemPrompt = "You are a friendly editor. Rewrite the text to be casual, warm, and approachable. Keep the core meaning. Output ONLY the rewritten text.";
-        userPrompt = `Rewrite this text to be friendly:\n\n${text}`;
-    } else if (style === "concise") {
-        systemPrompt = "You are a concise editor. Shorten the text, removing unnecessary words while keeping the meaning. Output ONLY the shortened text.";
-        userPrompt = `Make this text concise:\n\n${text}`;
-    }
-
     try {
         const dynamicMaxTokens = Math.max(128, Math.ceil(text.length / 1.5));
 
         const reply = await engine.chat.completions.create({
             messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: userPrompt }
+                { role: "system", content: "You are a professional editor. Your goal is to fix grammar, spelling, and tenses in the user's text. Keep the original meaning and tone. Do not change pronouns. Output ONLY the corrected text." },
+                { role: "user", content: `Correct the grammar and tenses in this text:\n\n${text}` }
             ],
             max_tokens: dynamicMaxTokens,
-            temperature: 0.3 // Slightly higher for styles
+            temperature: 0.1
         });
 
         console.log("Raw Reply:", reply);

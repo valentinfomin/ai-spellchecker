@@ -2,7 +2,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
   chrome.contextMenus.create({
     id: "fix-text",
-    title: "Local AI Spell Checker",
+    title: "Fix Text (AI)",
     contexts: ["selection"]
   });
 });
