@@ -1,5 +1,9 @@
 # Local AI Spell Checker & Page Chat
 
+## Support
+If you like my work, consider supporting me:  
+[Buy me a coffee ☕](https://www.buymeacoffee.com/watchdogalert)
+
 A privacy-focused Chrome Extension that runs Large Language Models (LLMs) **locally in your browser** using WebGPU. It allows you to fix grammar/spelling and chat with any webpage without sending your data to external servers.
 
 **Powered by [WebLLM](https://webllm.mlc.ai/)**
