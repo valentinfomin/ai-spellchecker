@@ -6,51 +6,46 @@ export default {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local AI - Private Browser Intelligence</title>
-    <meta name="description" content="Privacy-first AI spell checker and webpage summarizer running 100% locally using WebGPU.">
+    <title>Local AI - Private, In-Browser Intelligence</title>
+    <meta name="description" content="Privacy-first AI assistant running 100% locally in your browser. Spell check, grammar fixes, and page summarization without data tracking.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2563eb; /* Royal Blue */
-            --primary-dark: #1d4ed8;
-            --bg: #0f172a; /* Slate 900 */
-            --text: #f8fafc; /* Slate 50 */
-            --text-muted: #94a3b8; /* Slate 400 */
-            --card-bg: #1e293b; /* Slate 800 */
-            --border: #334155; /* Slate 700 */
+            --primary: #2563eb; /* Blue 600 */
+            --primary-hover: #1d4ed8; /* Blue 700 */
+            --bg: #ffffff;
+            --bg-alt: #f8fafc; /* Slate 50 */
+            --text-main: #0f172a; /* Slate 900 */
+            --text-muted: #64748b; /* Slate 500 */
+            --border: #e2e8f0; /* Slate 200 */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
 
         * { box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             background-color: var(--bg);
-            color: var(--text);
+            color: var(--text-main);
             margin: 0;
             line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
         }
 
         a { text-decoration: none; color: inherit; transition: 0.2s; }
 
-        /* Layout */
         .container {
-            max-width: 1100px;
+            max-width: 1024px;
             margin: 0 auto;
             padding: 0 1.5rem;
         }
 
-        /* Header */
-        header {
-            padding: 1.5rem 0;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            z-index: 10;
-        }
-        
+        /* Navbar */
         nav {
+            padding: 1.25rem 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -58,203 +53,215 @@ export default {
 
         .logo {
             font-weight: 800;
-            font-size: 1.25rem;
-            background: linear-gradient(135deg, #60a5fa, #a855f7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-
+        
         .nav-links a {
-            margin-left: 1.5rem;
+            margin-left: 2rem;
             color: var(--text-muted);
             font-weight: 500;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
-        .nav-links a:hover { color: var(--text); }
+        .nav-links a:hover { color: var(--primary); }
 
-        /* Hero */
+        /* Hero Section */
         .hero {
-            padding: 6rem 0 4rem;
+            padding: 5rem 0 3rem;
             text-align: center;
         }
 
         h1 {
             font-size: 3.5rem;
             font-weight: 800;
-            letter-spacing: -0.025em;
-            margin-bottom: 1.5rem;
+            letter-spacing: -0.03em;
             line-height: 1.1;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
         }
 
         h1 span {
-            color: var(--primary);
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .hero p {
-            color: var(--text-muted);
             font-size: 1.25rem;
-            max-width: 600px;
+            color: var(--text-muted);
+            max-width: 640px;
             margin: 0 auto 2.5rem;
-        }
-
-        .cta-group {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
         }
 
         .btn {
             display: inline-flex;
             align-items: center;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
+            justify-content: center;
+            padding: 0.875rem 2rem;
+            border-radius: 99px;
             font-weight: 600;
+            font-size: 1rem;
             transition: all 0.2s;
+            cursor: pointer;
         }
 
         .btn-primary {
-            background: var(--primary);
+            background-color: var(--primary);
             color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
         }
         .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
         }
 
-        .btn-secondary {
-            background: var(--card-bg);
+        .btn-outline {
+            background: white;
             border: 1px solid var(--border);
-            color: var(--text);
+            color: var(--text-main);
+            margin-left: 1rem;
         }
-        .btn-secondary:hover {
+        .btn-outline:hover {
             border-color: var(--text-muted);
+            background-color: var(--bg-alt);
         }
 
-        /* Features */
-        .features {
-            padding: 4rem 0;
+        /* Screenshot Container */
+        .browser-mockup {
+            margin-top: 4rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            background: white;
+        }
+        
+        .browser-mockup img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        /* Features Section */
+        .section-bg {
+            background-color: var(--bg-alt);
+            padding: 5rem 0;
+            margin-top: 5rem;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
+            gap: 2.5rem;
         }
 
         .feature-card {
-            background: var(--card-bg);
+            background: white;
             padding: 2rem;
-            border-radius: 12px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
             border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
         }
 
-        .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            display: inline-block;
-            background: rgba(37, 99, 235, 0.1);
-            padding: 0.5rem;
-            border-radius: 8px;
-        }
-
-        h3 { font-size: 1.25rem; margin: 0 0 0.5rem; }
-        p { color: var(--text-muted); margin: 0; }
-
-        /* Preview Section */
-        .preview {
-            margin: 4rem 0;
-            background: #000;
+        .icon {
+            width: 48px;
+            height: 48px;
+            background: #eff6ff;
+            color: var(--primary);
             border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
-            border: 1px solid var(--border);
-            position: relative;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio placeholder */
-        }
-        
-        .preview-placeholder {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(to bottom right, var(--card-bg), var(--bg));
-            color: var(--text-muted);
             font-size: 1.5rem;
+            margin-bottom: 1.5rem;
         }
+
+        h3 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.75rem; }
+        p { color: var(--text-muted); margin: 0; }
 
         /* Footer */
         footer {
-            border-top: 1px solid var(--border);
-            padding: 2rem 0;
-            margin-top: 4rem;
+            padding: 3rem 0;
             text-align: center;
             color: var(--text-muted);
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
+        
+        .heart { color: #ef4444; }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
             h1 { font-size: 2.5rem; }
-            .cta-group { flex-direction: column; }
+            .hero p { font-size: 1.1rem; }
+            .btn { width: 100%; margin: 0.5rem 0 0; }
+            .btn-outline { margin-left: 0; }
         }
     </style>
 </head>
 <body>
 
-<header>
     <div class="container">
         <nav>
-            <a href="#" class="logo">Local AI</a>
+            <a href="#" class="logo">
+                <span>⚡ Local AI</span>
+            </a>
             <div class="nav-links">
-                <a href="https://github.com/valentinfomin/ai-spellchecker">GitHub</a>
-                <a href="#">Chrome Web Store</a>
+                <a href="https://github.com/valentinfomin/ai-spellchecker">Source Code</a>
             </div>
         </nav>
-    </div>
-</header>
 
-<div class="container">
-    <section class="hero">
-        <h1>Private Intelligence.<br><span>Running Locally.</span></h1>
-        <p>Fix grammar, summarize webpages, and chat with your content using local LLMs inside your browser. No data leaves your device.</p>
-        
-        <div class="cta-group">
-            <a href="#" class="btn btn-primary">Add to Chrome</a>
-            <a href="https://github.com/valentinfomin/ai-spellchecker" class="btn btn-secondary">View Source</a>
-        </div>
-    </section>
+        <section class="hero">
+            <h1>Your Browser,<br><span>Now Intelligent.</span></h1>
+            <p>Summarize webpages, fix grammar, and chat with your content—all while keeping your data 100% private on your device.</p>
+            
+            <div class="cta-buttons">
+                <a href="#" class="btn btn-primary">Add to Chrome (Free)</a>
+                <a href="https://github.com/valentinfomin/ai-spellchecker" class="btn btn-outline">View on GitHub</a>
+            </div>
 
-    <div class="preview">
-        <div class="preview-placeholder">
-            <!-- You can replace this with an <img> tag pointing to your screenshot URL later -->
-            <img src="https://raw.githubusercontent.com/valentinfomin/ai-spellchecker/master/screenshots/screenshot1_spellcheck.png" 
-                 alt="App Screenshot" 
-                 style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;">
-        </div>
+            <div class="browser-mockup">
+                <img src="https://raw.githubusercontent.com/valentinfomin/ai-spellchecker/master/screenshots/screenshot1_spellcheck.png" alt="Local AI Interface">
+            </div>
+        </section>
     </div>
 
-    <section class="features">
-        <div class="feature-card">
-            <span class="feature-icon">🔒</span>
-            <h3>100% Private</h3>
-            <p>Your data never touches a server. All AI inference happens directly on your device using WebGPU.</p>
+    <div class="section-bg">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="icon">🔒</div>
+                    <h3>Private by Design</h3>
+                    <p>No cloud servers. No API keys. Your data stays on your computer using advanced WebGPU technology.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📝</div>
+                    <h3>Smart Editor</h3>
+                    <p>Context-aware spell check and grammar correction. Fix mistakes instantly with one click.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🧠</div>
+                    <h3>Page Intelligence</h3>
+                    <p>Chat with any webpage. Ask for summaries, key points, or specific details effortlessly.</p>
+                </div>
+            </div>
         </div>
-        <div class="feature-card">
-            <span class="feature-icon">⚡</span>
-            <h3>Instant Analysis</h3>
-            <p>Chat with any webpage. Summarize articles, ask questions, and extract insights in seconds.</p>
-        </div>
-        <div class="feature-card">
-            <span class="feature-icon">📝</span>
-            <h3>Smart Correction</h3>
-            <p>Context-aware spell checking and grammar fixing. Replace text instantly with a single click.</p>
-        </div>
-    </section>
-</div>
-
-<footer>
-    <div class="container">
-        <p>&copy; ${new Date().getFullYear()} Local AI. Open Source Project by Valentin Fomin.</p>
     </div>
-</footer>
+
+    <footer>
+        <div class="container">
+            <p>Open Source Project &bull; Built with <span class="heart">❤</span> by Valentin Fomin</p>
+        </div>
+    </footer>
 
 </body>
 </html>
