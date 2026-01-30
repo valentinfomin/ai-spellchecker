@@ -22,10 +22,16 @@ chrome.runtime.onInstalled.addListener(() => {
  */
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "fix-text") {
-    // Save text for side panel to consume upon opening
-    chrome.storage.local.set({ selectedText: info.selectionText }, () => {
-        // Open Side Panel in the context of the current tab
-        chrome.sidePanel.open({ tabId: tab.id });
-    });
+    // Inject content script manually before proceeding (since it's no longer auto-injected)
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id, allFrames: true },
+      files: ["content.js"]
+    }).then(() => {
+        // Save text for side panel to consume upon opening
+        chrome.storage.local.set({ selectedText: info.selectionText }, () => {
+            // Open Side Panel in the context of the current tab
+            chrome.sidePanel.open({ tabId: tab.id });
+        });
+    }).catch(err => console.error("Script injection failed: ", err));
   }
 });

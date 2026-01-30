@@ -10,8 +10,15 @@
 
 ## Repository Structure
 *   **`extension/`**: Core extension code.
-    *   `manifest.json`: Configuration, permissions, and CSP.
-    *   `sidepanel.html/js`: Persistent UI with LLM logic (WebLLM).
+*   **`manifest.json`**: 
+    *   Uses `sidePanel` permission for persistent UI.
+    *   `activeTab` and `scripting` permissions for targeted interaction (minimizes security warnings).
+    *   CSP allows `wasm-unsafe-eval` for the LLM runtime.
+
+*   **`sidepanel.html` / `sidepanel.js`**: 
+    *   **The Brain:** Hosts the `webllm.MLCEngine`.
+    *   **State Management:** Handles model loading (`CreateMLCEngine`), auto-recovery from WebGPU context loss, and tab switching (Spellcheck vs. Page Chat).
+    *   **Programmatic Injection:** Injects `content.js` on-demand using the `scripting` API when the user interacts or requests page content.
     *   `background.js`: Service worker for context menus and side panel triggers.
     *   `content.js`: Injected script for DOM text replacement and page reading.
     *   `simple-diff.js`: LCS-based text diffing for visual highlights.

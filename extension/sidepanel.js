@@ -91,6 +91,11 @@ async function initApp() {
         if (!lastResult) return;
         const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
         if (tab) {
+            // Ensure script is injected
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id, allFrames: true },
+                files: ["content.js"]
+            });
             chrome.tabs.sendMessage(tab.id, { action: "apply_fix", text: lastResult });
         }
     };
@@ -122,6 +127,13 @@ async function fetchPageText() {
     try {
         const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
         if (!tab) return "";
+
+        // Manually inject content script if not already there (required due to strict manifest)
+        await chrome.scripting.executeScript({
+            target: { tabId: tab.id, allFrames: true },
+            files: ["content.js"]
+        });
+
         const response = await chrome.tabs.sendMessage(tab.id, { action: "get_page_content" });
         return (response && response.content) ? response.content : "";
     } catch (e) {

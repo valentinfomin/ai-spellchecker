@@ -7,7 +7,6 @@ routes = [
 	{ pattern = "localai.alert24.org", custom_domain = true }
 ]
 
-# Optional: Add KV namespaces or other bindings here if needed
-# [[kv_namespaces]]
-# binding = "MY_KV"
-# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+[assets]
+directory = "./public"
+binding = "ASSETS"

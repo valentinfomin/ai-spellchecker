@@ -12,18 +12,12 @@
     "contextMenus", 
     "storage", 
     "activeTab",
-    "sidePanel"
+    "sidePanel",
+    "scripting"
   ],
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "all_frames": true
-    }
-  ],
   "side_panel": {
     "default_path": "sidepanel.html"
   },
