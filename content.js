@@ -99,5 +99,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
              }
         }
     }
+  } else if (request.action === "get_page_content") {
+      // Extract page text for AI analysis
+      // Limit to ~15k chars (approx 4k tokens) to be safe for small models
+      let text = document.body.innerText || "";
+      text = text.replace(/\s+/g, " ").trim().substring(0, 15000);
+      sendResponse({ content: text });
   }
 });

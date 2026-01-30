@@ -3,27 +3,64 @@
 <head>
   <meta charset="utf-8">
   <style>
-    body { width: 400px; padding: 15px; font-family: sans-serif; background-color: #f4f4f9; }
-    textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: none; }
+    body { width: 400px; padding: 15px; font-family: sans-serif; background-color: #f4f4f9; display: flex; flex-direction: column; height: 95vh; box-sizing: border-box; }
+    
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 15px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: none; cursor: pointer; font-weight: bold; color: #666; }
+    .tab-btn.active { border-bottom: 3px solid #007bff; color: #007bff; }
+    .tab-content { display: none; flex-direction: column; flex: 1; }
+    .tab-content.active { display: flex; }
+
+    /* Spellcheck Elements */
+    textarea#prompt { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: none; box-sizing: border-box; }
     select { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd; background: white; }
     button { width: 100%; padding: 12px; margin-top: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
     button:disabled { background-color: #aaa; }
+    
     #status { font-size: 11px; margin-top: 10px; color: #555; white-space: pre-wrap; }
     #output { margin-top: 15px; padding: 12px; background: white; border-left: 4px solid #007bff; display: none; line-height: 1.5; }
     .diff-del { background-color: #ffcccc; text-decoration: line-through; color: #a00; }
     .diff-ins { background-color: #ccffcc; color: #008000; font-weight: bold; }
+
+    /* Page Chat Elements */
+    #chat-history { flex: 1; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 10px; min-height: 200px; }
+    .chat-msg { margin-bottom: 10px; padding: 8px; border-radius: 5px; font-size: 13px; }
+    .msg-user { background: #e3f2fd; align-self: flex-end; margin-left: 20px; }
+    .msg-ai { background: #f5f5f5; align-self: flex-start; margin-right: 20px; }
+    #chat-input { width: 100%; height: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; resize: none; box-sizing: border-box; }
+    .action-row { display: flex; gap: 5px; }
   </style>
 </head>
 <body>
   <strong>Local AI</strong>
   <div style="margin-top:10px; font-size: 12px;">Select Model:</div>
   <select id="modelSelect"></select>
-  
-  <textarea id="prompt" placeholder="Enter text..."></textarea>
-  <button id="runBtn" disabled>Load Model</button>
   <div id="status">Waiting...</div>
-  <div id="output"></div>
-  <button id="replaceBtn" style="display:none; background-color: #28a745; margin-top: 10px;">Replace Selection</button>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab-spellcheck">Spell Check</button>
+    <button class="tab-btn" data-tab="tab-pagechat">Page Chat</button>
+  </div>
+
+  <!-- Spell Check Tab -->
+  <div id="tab-spellcheck" class="tab-content active">
+    <textarea id="prompt" placeholder="Enter text..."></textarea>
+    <div id="output"></div>
+    <button id="replaceBtn" style="display:none; background-color: #28a745; margin-top: 10px;">Replace Selection</button>
+  </div>
+
+  <!-- Page Chat Tab -->
+  <div id="tab-pagechat" class="tab-content">
+    <div id="chat-history"></div>
+    <textarea id="chat-input" placeholder="Ask something about this page..."></textarea>
+    <div class="action-row">
+        <button id="summarizeBtn" style="background: #17a2b8; flex:1;">📝 Summarize</button>
+        <button id="chatSendBtn" style="flex:1;">Send</button>
+    </div>
+  </div>
+
+  <button id="runBtn" disabled>Load Model</button>
 
   <script type="module" src="sidepanel.js"></script>
 </body>

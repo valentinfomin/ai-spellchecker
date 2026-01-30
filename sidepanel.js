@@ -4,18 +4,46 @@ import { diffWords } from "./simple-diff.js";
 const status = document.getElementById("status");
 const runBtn = document.getElementById("runBtn");
 const modelSelect = document.getElementById("modelSelect");
-const promptInput = document.getElementById("prompt");
+const promptInput = document.getElementById("prompt"); // Spellcheck input
 const output = document.getElementById("output");
 const replaceBtn = document.getElementById("replaceBtn");
 
+// Chat Elements
+const chatHistory = document.getElementById("chat-history");
+const chatInput = document.getElementById("chat-input");
+const summarizeBtn = document.getElementById("summarizeBtn");
+const chatSendBtn = document.getElementById("chatSendBtn");
+
 let engine = null;
-let lastResult = ""; // Store the last generated text
+let lastResult = ""; 
+let pageContext = ""; // Stores the current page text
 
 async function getDownloadedModels() {
     return JSON.parse(localStorage.getItem("downloaded_params") || "[]");
 }
 
 async function initApp() {
+    // Tab Logic
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
+        };
+    });
+
+    // Chat Logic
+    summarizeBtn.onclick = () => sendChatMessage("Summarize this page in 3 bullet points.", true);
+    chatSendBtn.onclick = () => {
+        const text = chatInput.value.trim();
+        if (text) {
+            sendChatMessage(text);
+            chatInput.value = "";
+        }
+    };
+
     const downloaded = await getDownloadedModels();
     const modelList = webllm.prebuiltAppConfig.model_list.map(m => m.model_id);
     modelSelect.innerHTML = "";
@@ -66,6 +94,71 @@ async function initApp() {
             chrome.tabs.sendMessage(tab.id, { action: "apply_fix", text: lastResult });
         }
     };
+}
+
+async function fetchPageText() {
+    try {
+        const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+        if (!tab) return "";
+        const response = await chrome.tabs.sendMessage(tab.id, { action: "get_page_content" });
+        return (response && response.content) ? response.content : "";
+    } catch (e) {
+        console.warn("Could not read page:", e);
+        return "";
+    }
+}
+
+function appendMessage(role, text) {
+    const div = document.createElement("div");
+    div.className = `chat-msg msg-${role}`;
+    div.innerText = text;
+    chatHistory.appendChild(div);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+async function sendChatMessage(userText, isSystemInstruction = false) {
+    // Auto-load model if missing
+    if (!engine) {
+        appendMessage("system", "⚠️ Model not ready. Auto-loading...");
+        await loadModel();
+        if (!engine) {
+            appendMessage("system", "❌ Failed to load model. Please try manually.");
+            return;
+        }
+    }
+    
+    // Always refresh context to ensure we are talking about the CURRENT page
+    pageContext = await fetchPageText();
+    
+    if (!pageContext) {
+        appendMessage("system", "⚠️ Could not read page content. (Try refreshing the page)");
+        return;
+    }
+
+    appendMessage("user", userText);
+    const loadingMsg = document.createElement("div");
+    loadingMsg.className = "chat-msg msg-ai";
+    loadingMsg.innerText = "Thinking...";
+    chatHistory.appendChild(loadingMsg);
+
+    try {
+        const reply = await engine.chat.completions.create({
+            messages: [
+                { role: "system", content: "You are a helpful AI assistant. Answer the user's question based on the provided Page Context. If the answer is not in the context, say so." },
+                { role: "user", content: `Page Context:\n${pageContext}\n\nQuestion: ${userText}` }
+            ],
+            max_tokens: 512,
+            temperature: 0.3
+        });
+
+        const aiText = reply.choices[0].message.content.trim();
+        chatHistory.removeChild(loadingMsg);
+        appendMessage("ai", aiText);
+
+    } catch (e) {
+        chatHistory.removeChild(loadingMsg);
+        appendMessage("system", "Error: " + e.message);
+    }
 }
 
 async function loadModel() {
