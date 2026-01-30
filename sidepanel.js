@@ -33,13 +33,29 @@ async function initApp() {
         modelSelect.appendChild(option);
     });
 
+    const updateButtonText = () => {
+        const isDownloaded = downloaded.includes(modelSelect.value);
+        runBtn.innerText = isDownloaded ? "Load Model" : "Download & Load Model";
+    };
+
+    modelSelect.onchange = () => {
+        runBtn.style.display = "block";
+        runBtn.disabled = false;
+        updateButtonText();
+        status.innerText = "Ready to load.";
+    };
+
+    updateButtonText();
+    
+    // Always attach the listener
+    runBtn.onclick = loadModel;
+
     if (autoLoad) {
         modelSelect.value = autoLoad;
         loadModel(); 
     } else {
         runBtn.disabled = false;
-        runBtn.onclick = loadModel; // Attach listener
-        status.innerText = "Ready to load model.";
+        status.innerText = "Select a model to start.";
     }
 
     // Attach Replace Button Listener
@@ -60,8 +76,13 @@ async function loadModel() {
     }
 
     if (engine) {
-        try { await engine.unload(); } catch (e) {}
-        engine = null;
+        try { 
+            // Attempt to unload nicely
+            await engine.unload(); 
+        } catch (e) {
+            console.warn("Unload error (likely already disposed):", e);
+        }
+        engine = null; // Ensure it's cleared
     }
 
     const selectedModel = modelSelect.value;
@@ -69,7 +90,7 @@ async function loadModel() {
     status.innerText = `🚀 Initializing GPU...`;
 
     try {
-        // Use CreateMLCEngine factory (better lifecycle management)
+        // Use CreateMLCEngine factory
         engine = await webllm.CreateMLCEngine(selectedModel, {
             initProgressCallback: (report) => {
                 status.innerText = report.text;
@@ -83,7 +104,7 @@ async function loadModel() {
             localStorage.setItem("downloaded_params", JSON.stringify(downloaded));
         }
         status.innerText = `✅ Ready`;
-        runBtn.style.display = "none"; // Hide button after loading
+        runBtn.style.display = "none";
         
         // Auto-trigger when typing
         let debounceTimer;
@@ -95,14 +116,31 @@ async function loadModel() {
         });
 
         checkStoredText();
+        sessionStorage.removeItem("retry_count"); // Clear retry count on success
+
     } catch (e) {
         console.error("Load Model Error:", e);
         engine = null;
         runBtn.disabled = false;
         
         let errorMsg = e.message;
-        if (errorMsg.includes("Instance reference")) errorMsg = "WebGPU Context Lost. Reload panel.";
-        status.innerText = `❌ ${errorMsg}`;
+        if (errorMsg.includes("Instance reference") || errorMsg.includes("disposed") || errorMsg.includes("Context Lost")) {
+             // Attempt auto-recovery once
+             const retries = parseInt(sessionStorage.getItem("retry_count") || "0");
+             if (retries < 1) {
+                 status.innerText = "⚠️ GPU Context lost. Auto-recovering...";
+                 sessionStorage.setItem("retry_count", retries + 1);
+                 setTimeout(() => location.reload(), 500);
+                 return;
+             }
+             
+             errorMsg = "WebGPU Context Lost. <span id='manualReload' style='cursor:pointer; font-weight:bold;' title='Click to reload'>⟳</span>";
+             sessionStorage.removeItem("retry_count"); // Reset for next time
+        }
+        status.innerHTML = `❌ ${errorMsg}`;
+        
+        const reloadIcon = document.getElementById('manualReload');
+        if (reloadIcon) reloadIcon.onclick = () => location.reload();
     }
 }
 
@@ -120,23 +158,30 @@ async function generateText() {
 
         const reply = await engine.chat.completions.create({
             messages: [
-                { role: "system", content: "You are a professional editor. Your goal is to fix grammar, spelling, and tenses in the user's text. Keep the original meaning and tone. Do not change pronouns. Output ONLY the corrected text." },
+                { role: "system", content: "You are a professional editor. Your goal is to fix grammar, spelling, and tenses in the user's text. Keep the original meaning and tone. Do not change pronouns. Output ONLY the corrected text. Do NOT explain your changes. Do NOT provide a list of edits." },
                 { role: "user", content: `Correct the grammar and tenses in this text:\n\n${text}` }
             ],
             max_tokens: dynamicMaxTokens,
-            temperature: 0.1
+            temperature: 0.0
         });
 
         console.log("Raw Reply:", reply);
         let result = reply.choices[0].message.content.trim();
         console.log("Content:", result);
 
-        // Clean up markdown code blocks if present
+        // Clean up markdown code blocks
         result = result.replace(/^```(text|markdown)?\n/i, "").replace(/\n```$/, "");
 
-        // Clean up common preambles
+        // Clean up preambles and POST-ambles (explanations at the end)
+        // 1. Remove "Here is the corrected text" prefix
         result = result.replace(/^(Here is the (corrected|rewritten|formal|concise) (text|version)|Sure, here is):?\s*/i, "")
                        .replace(/^["']|["']$/g, "").trim();
+        
+        // 2. Remove "I made the following changes:" and everything after it
+        const explanationIndex = result.search(/\n(I made the following changes|Changes made|Here are the changes):/i);
+        if (explanationIndex !== -1) {
+            result = result.substring(0, explanationIndex).trim();
+        }
 
         if (!result) {
             output.innerHTML = "⚠️ Empty response. Try a different model or rephrase.";
