@@ -96,6 +96,28 @@ async function initApp() {
     };
 }
 
+// Helper: Wrapper for AI calls to handle "Model not loaded" errors automatically
+async function safeEngineCall(messages, max_tokens, temperature) {
+    try {
+        if (!engine) throw new Error("Model not loaded");
+        return await engine.chat.completions.create({ messages, max_tokens, temperature });
+    } catch (e) {
+        const msg = (e.message || "").toLowerCase();
+        if (msg.includes("model not loaded") || msg.includes("disposed") || msg.includes("instance reference")) {
+            console.warn("Engine state invalid. Attempting auto-reload...", e);
+            appendMessage("system", "⚠️ Connection lost. Reconnecting..."); // Feedback for chat users
+            
+            // Force reload
+            await loadModel();
+            if (!engine) throw new Error("Auto-reload failed.");
+
+            // Retry once
+            return await engine.chat.completions.create({ messages, max_tokens, temperature });
+        }
+        throw e;
+    }
+}
+
 async function fetchPageText() {
     try {
         const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
@@ -117,7 +139,7 @@ function appendMessage(role, text) {
 }
 
 async function sendChatMessage(userText, isSystemInstruction = false) {
-    // Auto-load model if missing
+    // Ensure engine is at least nominally present (safeEngineCall will fix if broken)
     if (!engine) {
         appendMessage("system", "⚠️ Model not ready. Auto-loading...");
         await loadModel();
@@ -142,14 +164,10 @@ async function sendChatMessage(userText, isSystemInstruction = false) {
     chatHistory.appendChild(loadingMsg);
 
     try {
-        const reply = await engine.chat.completions.create({
-            messages: [
-                { role: "system", content: "You are a helpful AI assistant. Answer the user's question based on the provided Page Context. If the answer is not in the context, say so." },
-                { role: "user", content: `Page Context:\n${pageContext}\n\nQuestion: ${userText}` }
-            ],
-            max_tokens: 512,
-            temperature: 0.3
-        });
+        const reply = await safeEngineCall([
+            { role: "system", content: "You are a helpful AI assistant. Answer the user's question based on the provided Page Context. If the answer is not in the context, say so." },
+            { role: "user", content: `Page Context:\n${pageContext}\n\nQuestion: ${userText}` }
+        ], 512, 0.3);
 
         const aiText = reply.choices[0].message.content.trim();
         chatHistory.removeChild(loadingMsg);
@@ -249,18 +267,14 @@ async function generateText() {
     try {
         const dynamicMaxTokens = Math.max(128, Math.ceil(text.length / 1.5));
 
-        const reply = await engine.chat.completions.create({
-            messages: [
-                { role: "system", content: "You are a specialized spellchecker. Fix all grammar, spelling, punctuation, and capitalization errors. Output ONLY the corrected text. Do NOT explain." },
-                { role: "user", content: "Correct this text:\n\nello sword" },
-                { role: "assistant", content: "Hello sword" },
-                { "role": "user", "content": "Correct this text:\n\ni has a apple" },
-                { "role": "assistant", "content": "I have an apple." },
-                { role: "user", content: `Correct this text:\n\n${text}` }
-            ],
-            max_tokens: dynamicMaxTokens,
-            temperature: 0.0
-        });
+        const reply = await safeEngineCall([
+            { role: "system", content: "You are a specialized spellchecker. Fix all grammar, spelling, punctuation, and capitalization errors. Output ONLY the corrected text. Do NOT explain." },
+            { role: "user", content: "Correct this text:\n\nello sword" },
+            { role: "assistant", content: "Hello sword" },
+            { "role": "user", "content": "Correct this text:\n\ni has a apple" },
+            { "role": "assistant", "content": "I have an apple." },
+            { role: "user", content: `Correct this text:\n\n${text}` }
+        ], dynamicMaxTokens, 0.0);
 
         console.log("Raw Reply:", reply);
         let result = reply.choices[0].message.content.trim();
