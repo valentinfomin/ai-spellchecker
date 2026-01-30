@@ -1,3 +1,35 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node (if you ever add it)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Extension builds
 production/
-production.zip
+*.zip
+*.crx
+*.pem
+
+# Gemini/Env
 .gemini/
+.env
+.env.local
+config.js
+secrets.js
+
+# Logs
+*.log
