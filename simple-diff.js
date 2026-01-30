@@ -1,3 +1,8 @@
+/**
+ * Simple text diff algorithm (Longest Common Subsequence).
+ * Used to calculate word-level differences between original and fixed text.
+ * Returns a list of changes: { type: 'same'|'ins'|'del', value: string }
+ */
 export function diffWords(text1, text2) {
   // Split text into words, punctuation, and whitespace tokens
   // \w matches standard word characters
