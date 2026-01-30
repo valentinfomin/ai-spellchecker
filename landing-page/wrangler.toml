@@ -1,0 +1,13 @@
+name = "local-ai-landing"
+main = "src/index.js"
+compatibility_date = "2024-01-29"
+
+# Configure the custom domain
+routes = [
+	{ pattern = "localai.alert24.org", custom_domain = true }
+]
+
+# Optional: Add KV namespaces or other bindings here if needed
+# [[kv_namespaces]]
+# binding = "MY_KV"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
