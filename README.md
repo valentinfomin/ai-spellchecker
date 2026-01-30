@@ -1,4 +1,4 @@
-# Local AI Spell Checker & Page Chat
+# Local AI: Private Spell Checker & Chat
 
 ## Support
 If you like my work, consider supporting me:  
@@ -8,17 +8,16 @@ A privacy-focused Chrome Extension that runs Large Language Models (LLMs) **loca
 
 **Powered by [WebLLM](https://webllm.mlc.ai/)**
 
-## Features
+## Why Local AI?
+Most AI extensions "read and change your data on all websites" and send your text to the cloud. **Local AI** is different:
+*   **Permissions:** It only accesses the website you are currently looking at when you explicitly click it (**`activeTab`**).
+*   **Privacy:** 100% of the AI processing happens on your own graphics card (GPU). No text is ever uploaded to the internet.
 
-*   **🔒 100% Local Privacy:** No data leaves your device (after initial model download).
-*   **📝 Smart Spell Checker:** Context-aware grammar and spell checking.
-    *   Select text on any page -> Right-click -> "Local AI Spell Checker".
-    *   Auto-fix while typing in the panel.
-    *   "Replace Selection" button to instantly update text on the page.
-*   **💬 Page Chat:** Talk to your browser tab!
-    *   Automatically reads the current page content.
-    *   Ask questions like "Summarize this page" or "What is the main argument?".
-*   **🧠 Multiple Models:** Supports Llama-3, Phi-3, Gemma, and more.
+## Features
+*   **📝 Smart Spell Checker:** Context-aware grammar and spell checking with visual Red/Green diffs.
+*   **💬 Page Chat:** Ask questions or summarize any webpage instantly.
+*   **🔒 100% Local:** Works offline (after model download) and keeps your data private.
+*   **🧠 Multiple Models:** Choose between Llama-3, Phi-3, Gemma, and more.
 
 ---
 
@@ -31,75 +30,48 @@ Since this extension is in development, you need to install it manually.
     ```bash
     git clone https://github.com/valentinfomin/ai-spellchecker.git
     ```
-*   **Or Download ZIP:** Click "Code" > "Download ZIP" on GitHub.
-    *   **Windows:** Right-click the ZIP -> **Extract All...**.
-    *   **Mac:** Double-click the ZIP file to extract it.
+*   **Or Download ZIP:** Click "Code" > "Download ZIP" on GitHub and extract the folder.
 
 ### 2. Install in Google Chrome
 1.  Open Chrome and navigate to `chrome://extensions`.
-2.  Toggle **Developer mode** in the top right corner.
-3.  Click the **Load unpacked** button (top left).
-4.  **Important:** Select the **`extension`** folder inside the directory you just downloaded.
-    *   *Do not select the root folder containing 'landing-page' or 'marketing'.*
-5.  The extension "Local AI: Private Spell Checker & Chat" should appear in your list.
+2.  Toggle **Developer mode** (top right).
+3.  Click **Load unpacked** (top left).
+4.  **Crucial:** Select the **`extension`** folder inside the project directory.
+5.  The extension "Local AI" will appear.
 
 ### 3. Install in Brave Browser
-**Important:** Brave disables WebGPU by default. You must enable it first.
-
-1.  **Enable WebGPU:**
-    *   Type `brave://flags` in the address bar.
-    *   Search for **"WebGPU"**.
-    *   Set **"WebGPU Developer Features"** to **Enabled**.
-    *   Click **Relaunch** at the bottom.
-2.  **Enable Hardware Acceleration:**
-    *   Go to `brave://settings/system`.
-    *   Ensure **"Use graphics acceleration when available"** is **ON**.
-    *   *Windows Note:* If it still doesn't work, ensure your Windows Graphics Drivers (NVIDIA/AMD/Intel) are up to date.
-    *   *Mac Note:* Works best on Apple Silicon (M1/M2/M3) chips. Intel Macs might run slower.
-3.  **Install Extension:**
-    *   Go to `brave://extensions`.
-    *   Toggle **Developer mode** (top right).
-    *   Click **Load unpacked**.
-    *   Select the **`extension`** folder.
+1.  **Enable WebGPU:** Type `brave://flags` in the address bar. Search for **"WebGPU"** and set to **Enabled**. Relaunch Brave.
+2.  **Enable Hardware Acceleration:** Go to `brave://settings/system` and ensure **"Use graphics acceleration"** is ON.
+3.  **Install:** Go to `brave://extensions`, enable Developer mode, and **Load unpacked** the `extension` folder.
 
 ---
 
 ## 🚀 How to Use
 
 ### Initial Setup
-1.  Click the extension icon (puzzle piece) or open the **Side Panel** in your browser.
-2.  Select a model from the dropdown (Recommended: **Llama-3-8B-Instruct** for best quality, or **Phi-3-mini** for speed).
+1.  Open the **Side Panel** (click the Local AI icon).
+2.  Select a model (e.g., **Llama-3-8B-Instruct**).
 3.  Click **"Download & Load Model"**.
-    *   *Note: This will download ~2GB-4GB of data once. Please be patient.*
+    *   *Note: This downloads ~2GB-4GB once. It stays in your browser cache.*
 
 ### Spell Check
-1.  **Context Menu:** Highlight text on any website -> Right-click -> Select **"Local AI Spell Checker"**. The side panel will open and fix the text.
-2.  **Manual:** Type or paste text directly into the Side Panel's text box.
-3.  **Replace:** Review the changes (highlighted in Green/Red). Click **"Replace Selection"** to update the text on the webpage automatically.
+1.  **Context Menu:** Highlight text -> Right-click -> **"Local AI Spell Checker"**.
+2.  **Auto-Fix:** Type in the panel; it will suggest fixes automatically after you stop typing.
+3.  **Replace:** Click **"Replace Selection"** to update the website text instantly.
 
 ### Page Chat
-1.  Open the Side Panel.
-2.  Click the **"Page Chat"** tab at the top.
-3.  Type a question (e.g., *"Summarize this article"*) or click the **"Summarize"** button.
-4.  The AI will read the page content automatically and answer your question.
+1.  Switch to the **"Page Chat"** tab.
+2.  Ask a question or click **"Summarize"**.
+3.  The AI reads the page and responds locally.
 
 ---
 
 ## ⚠️ Troubleshooting
-
-**"WebGPU Context Lost" or "Object Disposed"**
-*   This happens if the browser's GPU process crashes or is reset.
-*   **Fix:** Close and reopen the Side Panel. The extension attempts to auto-recover, but a manual reopen is sometimes required.
-
-**"Model not loaded"**
-*   Ensure you clicked "Load Model" and saw the "✅ Ready" status.
-*   If the error persists, reload the extension in `chrome://extensions`.
-
-**Brave: "WebGPU not supported"**
-*   Double-check `brave://flags` and ensure WebGPU is enabled.
-*   Ensure your graphics drivers are up to date.
+*   **WebGPU Context Lost:** Close and reopen the Side Panel. The extension will auto-recover.
+*   **Brave Issues:** Ensure `WebGPU Developer Features` is enabled in `brave://flags`.
+*   **Model not loading:** Refresh the side panel or check `chrome://gpu` to ensure your browser can see your graphics card.
 
 ---
 
 ## License
-MIT License
+MIT License &copy; 2026 Michael & Co

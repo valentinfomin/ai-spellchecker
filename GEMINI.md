@@ -1,60 +1,43 @@
-# Local AI Project Overview
+# Local AI Project Architecture
 
 ## Project Overview
-**Local AI** is a privacy-first Chrome Extension (Manifest V3) and a corresponding landing page. It runs Large Language Models (LLMs) **locally in the browser** via **WebGPU**, providing spell/grammar checking and webpage chat/summarization without sending data to external servers.
-
-### Key Components
-*   **Extension:** The core browser plugin.
-*   **Marketing:** Visual assets for the Chrome Web Store.
-*   **Landing Page:** A Cloudflare Worker-based website (localai.alert24.org).
+**Local AI** is a privacy-first suite consisting of a Chrome Extension (Manifest V3) and a landing page. It performs Large Language Model (LLM) inference **locally in the browser** using **WebGPU**, providing high-performance text correction and RAG-based page analysis.
 
 ## Repository Structure
-*   **`extension/`**: Core extension code.
-*   **`manifest.json`**: 
-    *   Uses `sidePanel` permission for persistent UI.
-    *   `activeTab` and `scripting` permissions for targeted interaction (minimizes security warnings).
-    *   CSP allows `wasm-unsafe-eval` for the LLM runtime.
 
-*   **`sidepanel.html` / `sidepanel.js`**: 
-    *   **The Brain:** Hosts the `webllm.MLCEngine`.
-    *   **State Management:** Handles model loading (`CreateMLCEngine`), auto-recovery from WebGPU context loss, and tab switching (Spellcheck vs. Page Chat).
-    *   **Programmatic Injection:** Injects `content.js` on-demand using the `scripting` API when the user interacts or requests page content.
-    *   `background.js`: Service worker for context menus and side panel triggers.
-    *   `content.js`: Injected script for DOM text replacement and page reading.
-    *   `simple-diff.js`: LCS-based text diffing for visual highlights.
-    *   `web-llm.js`: Local LLM runtime library.
-    *   `icons/`: Validated PNG icons for the extension.
-*   **`marketing/`**: Store listing assets.
-    *   `screenshots/`: 1280x800 PNGs showing the app in action.
-    *   `promo_art/`: Small and Marquee promo tiles for the Web Store.
-*   **`landing-page/`**: Cloudflare Worker project.
-    *   `public/`: Static HTML, CSS, and internal assets (assets/).
-    *   `wrangler.toml`: Deployment configuration for localai.alert24.org.
+### 📁 `extension/` (Main Application)
+*   **`manifest.json`**: Configures `sidePanel` and `activeTab`. Uses `scripting` API for on-demand code injection instead of broad content script matching.
+*   **`sidepanel.js`**: Orchestrates the **WebLLM** engine, tab switching, and state management.
+*   **`background.js`**: Listens for context menu clicks and programmatically injects `content.js` to the active tab.
+*   **`content.js`**: Injected script that extracts `innerText` for chat and performs DOM manipulation for text replacement.
+*   **`simple-diff.js`**: Implementation of the Longest Common Subsequence (LCS) algorithm for word-level visual diffing.
+*   **`web-llm.js`**: Bundled runtime for MLC-LLM inference.
 
-## Core Functionality
+### 📁 `landing-page/` (Website)
+*   **`public/`**: Static hosting folder containing `index.html`, `support.html`, and `privacypolicy.html`.
+*   **`src/index.js`**: Cloudflare Worker script that serves the static assets.
+*   **`wrangler.toml`**: Deployment configuration for `localai.alert24.org`.
 
-### 1. Local LLM Inference
-Uses **WebLLM** and **WebGPU** to run 4-bit quantized models (e.g., Llama-3, Phi-3). Models are cached locally in the browser's Cache API.
+### 📁 `marketing/` (Store Assets)
+*   **`screenshots/`**: High-resolution PNGs of the interface.
+*   **`promo_art/`**: Specialized tiles for the Chrome Web Store listing.
 
-### 2. Intelligent Spell Check
-*   **UI:** Tabbed interface in the Chrome Side Panel.
-*   **Prompting:** Uses "Few-Shot Prompting" to enforce strict output.
-*   **Visuals:** Real-time word-level diffing (Red/Green) to show edits.
-*   **Replacement:** One-click replacement in the active DOM element via `content.js`.
+## Technical Implementation
 
-### 3. Page Chat & RAG
-*   **Mechanism:** Automatically extracts current tab content (`innerText`) up to ~15k chars.
-*   **Interface:** Chat-style interaction to ask questions about the page or request summaries.
+### 1. Security & Permissions
+The project implements the **Principle of Least Privilege**:
+*   **No `<all_urls>`:** The extension cannot see website data until the user interacts with it.
+*   **`activeTab` + `scripting`:** Scripts are injected only into the tab the user is actively correcting.
+*   **Local-Only:** No data is transmitted to external servers.
 
-## Reliability & Performance
-*   **Auto-Recovery:** Detects WebGPU "Context Lost" errors and automatically reloads the panel/engine.
-*   **Robust Wrapper:** `safeEngineCall` manages engine state, automatically re-initializing and retrying requests if the model is disposed or not loaded.
-*   **Debounced Input:** Manual spellcheck triggers 800ms after the user stops typing to save GPU cycles.
+### 2. LLM Prompt Engineering
+*   **Few-Shot Learning:** Uses example pairs (Input -> Fixed) in the system prompt to force the model into a deterministic, non-conversational "Correction Only" mode.
+*   **Smart Cleanup:** Post-processing regex removes AI-generated preambles ("Here is the text...") and markdown markers.
 
-## Deployment & Hosting
-*   **Extension:** Packaged as a `.zip` for Chrome Web Store upload.
-*   **Website:** Hosted on Cloudflare Workers at **https://localai.alert24.org/**, serving static assets from the `public/` folder.
+### 3. Reliability System
+*   **Auto-Recovery:** Detects `Object disposed` or `Context lost` errors. It automatically triggers an engine re-initialization and retries the user's request.
+*   **Safe Wrapper:** `safeEngineCall` acts as a middleman for all LLM calls, managing the engine's lifecycle transparently.
 
-## Setup & Maintenance
-Refer to `README.md` for installation instructions.
-For security, `.gitignore` is configured to exclude OS files, build artifacts, and potential secrets.
+## Deployment
+*   **Plugin:** Uploaded to Chrome Web Store via ZIP.
+*   **Web:** Deployed to Cloudflare Edge at **https://localai.alert24.org**.
