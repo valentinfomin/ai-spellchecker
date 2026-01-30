@@ -1,5 +1,104 @@
 export default {
   async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    // --- Support Page Content ---
+    if (path === '/support') {
+        const supportHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - Local AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        body { font-family: 'Inter', sans-serif; margin: 0; color: var(--text-main); line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
+        
+        nav { padding: 1.5rem 0; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .logo { font-weight: 800; font-size: 1.25rem; color: var(--primary); text-decoration: none; }
+        .nav-links a { margin-left: 1.5rem; color: var(--text-muted); text-decoration: none; font-weight: 500; }
+        .nav-links a:hover { color: var(--primary); }
+
+        h1 { font-size: 2.5rem; margin-top: 3rem; }
+        h2 { margin-top: 2rem; }
+        p { color: var(--text-muted); }
+        
+        .faq-item { margin-bottom: 1.5rem; border: 1px solid var(--border); padding: 1.5rem; border-radius: 8px; }
+        .faq-question { font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); }
+        
+        .btn-coffee {
+            display: inline-block;
+            background: #FFDD00;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="/" class="logo">⚡ Local AI</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="https://github.com/valentinfomin/ai-spellchecker">GitHub</a>
+            </div>
+        </nav>
+
+        <h1>Support & FAQ</h1>
+        <p>Need help with Local AI? Check the common issues below or reach out.</p>
+
+        <h2>Common Issues</h2>
+        
+        <div class="faq-item">
+            <div class="faq-question">❌ Error: WebGPU Context Lost</div>
+            <p>This happens if your browser's graphics process crashes. To fix it, try closing and reopening the Side Panel. If that fails, restart your browser.</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">❌ Model not loaded</div>
+            <p>Make sure you clicked "Download & Load Model" in the side panel. The model files are large (~2GB) and need to finish downloading before use.</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">⚠️ Brave Browser Issues</div>
+            <p>Brave disables WebGPU by default. Go to <code>brave://flags</code> and enable "WebGPU Developer Features", then enable "Graphics Acceleration" in Settings.</p>
+        </div>
+
+        <h2>Contact</h2>
+        <p>Found a bug? Please open an issue on our GitHub repository.</p>
+        <p><a href="https://github.com/valentinfomin/ai-spellchecker/issues">Report an Issue on GitHub &rarr;</a></p>
+
+        <hr style="margin: 3rem 0; border: 0; border-top: 1px solid var(--border);">
+
+        <h2>Support the Project</h2>
+        <p>Local AI is free and open source. If you find it useful, consider buying me a coffee to support development!</p>
+        <a href="https://www.buymeacoffee.com/watchdogalert" class="btn-coffee" target="_blank">☕ Buy me a coffee</a>
+        
+        <br><br><br>
+    </div>
+</body>
+</html>
+        `;
+        return new Response(supportHtml, { headers: { "content-type": "text/html;charset=UTF-8" } });
+    }
+
+    // --- Main Landing Page Content ---
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -212,10 +311,11 @@ export default {
 
     <div class="container">
         <nav>
-            <a href="#" class="logo">
+            <a href="/" class="logo">
                 <span>⚡ Local AI</span>
             </a>
             <div class="nav-links">
+                <a href="/support">Support</a>
                 <a href="https://github.com/valentinfomin/ai-spellchecker">Source Code</a>
             </div>
         </nav>
