@@ -28,13 +28,16 @@ Since this extension is in development, you need to install it manually.
     git clone https://github.com/valentinfomin/ai-spellchecker.git
     ```
 *   **Or Download ZIP:** Click "Code" > "Download ZIP" on GitHub.
-    *   **Windows Users:** Right-click the downloaded ZIP file -> **Extract All...** to a folder (e.g., `Downloads\ai-spellchecker`).
+    *   **Windows:** Right-click the ZIP -> **Extract All...** (e.g., to `Downloads\ai-spellchecker`).
+    *   **Mac:** Double-click the ZIP file to extract it (e.g., to `Downloads/ai-spellchecker`).
 
 ### 2. Install in Google Chrome
 1.  Open Chrome and navigate to `chrome://extensions`.
 2.  Toggle **Developer mode** in the top right corner.
 3.  Click the **Load unpacked** button (top left).
-4.  Select the folder where you extracted the extension (e.g., `C:\Users\YourName\Downloads\ai-spellchecker`).
+4.  Select the folder where you extracted the extension.
+    *   **Windows:** `C:\Users\YourName\Downloads\ai-spellchecker`
+    *   **Mac:** `/Users/YourName/Downloads/ai-spellchecker`
 5.  The extension "AI Spellchecker" should appear in your list.
 
 ### 3. Install in Brave Browser
@@ -49,6 +52,7 @@ Since this extension is in development, you need to install it manually.
     *   Go to `brave://settings/system`.
     *   Ensure **"Use graphics acceleration when available"** is **ON**.
     *   *Windows Note:* If it still doesn't work, ensure your Windows Graphics Drivers (NVIDIA/AMD/Intel) are up to date.
+    *   *Mac Note:* Works best on Apple Silicon (M1/M2/M3) chips. Intel Macs might run slower.
 3.  **Install Extension:**
     *   Go to `brave://extensions`.
     *   Toggle **Developer mode** (top right).
