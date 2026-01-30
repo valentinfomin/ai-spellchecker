@@ -158,8 +158,12 @@ async function generateText() {
 
         const reply = await engine.chat.completions.create({
             messages: [
-                { role: "system", content: "You are a professional editor. Your goal is to fix grammar, spelling, and tenses in the user's text. Keep the original meaning and tone. Do not change pronouns. Output ONLY the corrected text. Do NOT explain your changes. Do NOT provide a list of edits." },
-                { role: "user", content: `Correct the grammar and tenses in this text:\n\n${text}` }
+                { role: "system", content: "You are a specialized spellchecker. Fix all grammar, spelling, punctuation, and capitalization errors. Output ONLY the corrected text. Do NOT explain." },
+                { role: "user", content: "Correct this text:\n\nello sword" },
+                { role: "assistant", content: "Hello sword" },
+                { "role": "user", "content": "Correct this text:\n\ni has a apple" },
+                { "role": "assistant", "content": "I have an apple." },
+                { role: "user", content: `Correct this text:\n\n${text}` }
             ],
             max_tokens: dynamicMaxTokens,
             temperature: 0.0
@@ -172,16 +176,20 @@ async function generateText() {
         // Clean up markdown code blocks
         result = result.replace(/^```(text|markdown)?\n/i, "").replace(/\n```$/, "");
 
-        // Clean up preambles and POST-ambles (explanations at the end)
-        // 1. Remove "Here is the corrected text" prefix
-        result = result.replace(/^(Here is the (corrected|rewritten|formal|concise) (text|version)|Sure, here is):?\s*/i, "")
-                       .replace(/^["']|["']$/g, "").trim();
-        
-        // 2. Remove "I made the following changes:" and everything after it
-        const explanationIndex = result.search(/\n(I made the following changes|Changes made|Here are the changes):/i);
-        if (explanationIndex !== -1) {
-            result = result.substring(0, explanationIndex).trim();
+        // Intelligent Cleanup:
+        // 1. If result contains quotes and looks like: Here is the text: "Fixed Text", extract the quotes.
+        // But be careful not to extract quotes IF the original text had quotes.
+        const quoteMatch = result.match(/"([^"]+)"/);
+        if (quoteMatch && result.length > text.length * 2) { 
+             // If result is much longer than input, it likely contains explanations + quoted answer.
+             // We take the quoted part.
+             result = quoteMatch[1];
         }
+
+        // 2. Remove known explanation patterns
+        result = result.replace(/^(The text is|Here is|I have|I changed|Note:|Corrected:|Revised:).*/i, "")
+                       .replace(/(\n|^)(I changed|I have|The text|Here is|Note:).*/gs, "") // Remove trailing explanations
+                       .trim();
 
         if (!result) {
             output.innerHTML = "⚠️ Empty response. Try a different model or rephrase.";
