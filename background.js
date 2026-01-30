@@ -9,9 +9,9 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "fix-text") {
-    // Сохраняем текст для сайдбара
+    // Save text for side panel
     chrome.storage.local.set({ selectedText: info.selectionText }, () => {
-        // Открываем Side Panel
+        // Open Side Panel
         chrome.sidePanel.open({ tabId: tab.id });
     });
   }
