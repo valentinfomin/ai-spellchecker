@@ -259,7 +259,7 @@ export default {
 
     <footer>
         <div class="container">
-            <p>Open Source Project &bull; Built with <span class="heart">❤</span> by Valentin Fomin</p>
+            <p>Open Source Project &bull; Built with <span class="heart">❤</span> by Michael & Co</p>
         </div>
     </footer>
 
