@@ -32,17 +32,16 @@ Since this extension is in development, you need to install it manually.
     git clone https://github.com/valentinfomin/ai-spellchecker.git
     ```
 *   **Or Download ZIP:** Click "Code" > "Download ZIP" on GitHub.
-    *   **Windows:** Right-click the ZIP -> **Extract All...** (e.g., to `Downloads\ai-spellchecker`).
-    *   **Mac:** Double-click the ZIP file to extract it (e.g., to `Downloads/ai-spellchecker`).
+    *   **Windows:** Right-click the ZIP -> **Extract All...**.
+    *   **Mac:** Double-click the ZIP file to extract it.
 
 ### 2. Install in Google Chrome
 1.  Open Chrome and navigate to `chrome://extensions`.
 2.  Toggle **Developer mode** in the top right corner.
 3.  Click the **Load unpacked** button (top left).
-4.  Select the folder where you extracted the extension.
-    *   **Windows:** `C:\Users\YourName\Downloads\ai-spellchecker`
-    *   **Mac:** `/Users/YourName/Downloads/ai-spellchecker`
-5.  The extension "AI Spellchecker" should appear in your list.
+4.  **Important:** Select the **`extension`** folder inside the directory you just downloaded.
+    *   *Do not select the root folder containing 'landing-page' or 'marketing'.*
+5.  The extension "Local AI: Private Spell Checker & Chat" should appear in your list.
 
 ### 3. Install in Brave Browser
 **Important:** Brave disables WebGPU by default. You must enable it first.
@@ -61,7 +60,7 @@ Since this extension is in development, you need to install it manually.
     *   Go to `brave://extensions`.
     *   Toggle **Developer mode** (top right).
     *   Click **Load unpacked**.
-    *   Select the extension folder.
+    *   Select the **`extension`** folder.
 
 ---
 
