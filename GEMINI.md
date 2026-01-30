@@ -1,68 +1,53 @@
-# Local AI Spell Checker & Page Chat
+# Local AI Project Overview
 
 ## Project Overview
+**Local AI** is a privacy-first Chrome Extension (Manifest V3) and a corresponding landing page. It runs Large Language Models (LLMs) **locally in the browser** via **WebGPU**, providing spell/grammar checking and webpage chat/summarization without sending data to external servers.
 
-**Local AI** (formerly AI Spellchecker) is a privacy-first Chrome Extension (Manifest V3) that runs Large Language Models (LLMs) **locally in the browser** via **WebGPU**. 
+### Key Components
+*   **Extension:** The core browser plugin.
+*   **Marketing:** Visual assets for the Chrome Web Store.
+*   **Landing Page:** A Cloudflare Worker-based website (localai.alert24.org).
 
-It provides two main functionalities:
-1.  **Spell/Grammar Checking:** Context-aware correction with visual diffs and one-click replacement.
-2.  **Page Chat:** RAG-like capability to read the current webpage's content and answer questions or summarize it.
+## Repository Structure
+*   **`extension/`**: Core extension code.
+    *   `manifest.json`: Configuration, permissions, and CSP.
+    *   `sidepanel.html/js`: Persistent UI with LLM logic (WebLLM).
+    *   `background.js`: Service worker for context menus and side panel triggers.
+    *   `content.js`: Injected script for DOM text replacement and page reading.
+    *   `simple-diff.js`: LCS-based text diffing for visual highlights.
+    *   `web-llm.js`: Local LLM runtime library.
+    *   `icons/`: Validated PNG icons for the extension.
+*   **`marketing/`**: Store listing assets.
+    *   `screenshots/`: 1280x800 PNGs showing the app in action.
+    *   `promo_art/`: Small and Marquee promo tiles for the Web Store.
+*   **`landing-page/`**: Cloudflare Worker project.
+    *   `public/`: Static HTML, CSS, and internal assets (assets/).
+    *   `wrangler.toml`: Deployment configuration for localai.alert24.org.
 
-**Key Technologies:**
-*   **WebLLM (MLC-LLM):** Core engine for in-browser inference.
-*   **Chrome Side Panel API:** Persistent UI that keeps the model loaded while browsing.
-*   **WebGPU:** Hardware acceleration for running 4-bit quantized models (Llama-3, Phi-3, etc.).
+## Core Functionality
 
-## Architecture
+### 1. Local LLM Inference
+Uses **WebLLM** and **WebGPU** to run 4-bit quantized models (e.g., Llama-3, Phi-3). Models are cached locally in the browser's Cache API.
 
-*   **`manifest.json`**: 
-    *   Uses `sidePanel` permission for persistent UI.
-    *   `content_scripts` configured with `all_frames: true` to handle text in iframes.
-    *   CSP allows `wasm-unsafe-eval` for the LLM runtime.
+### 2. Intelligent Spell Check
+*   **UI:** Tabbed interface in the Chrome Side Panel.
+*   **Prompting:** Uses "Few-Shot Prompting" to enforce strict output.
+*   **Visuals:** Real-time word-level diffing (Red/Green) to show edits.
+*   **Replacement:** One-click replacement in the active DOM element via `content.js`.
 
-*   **`sidepanel.html` / `sidepanel.js`**:
-    *   **The Brain:** Hosts the `webllm.MLCEngine`.
-    *   **State Management:** Handles model loading (`CreateMLCEngine`), auto-recovery from WebGPU context loss, and tab switching (Spellcheck vs. Page Chat).
-    *   **Robustness:** Implements `safeEngineCall` wrapper to handle "Model not loaded" or "Object disposed" errors by automatically reloading the engine and retrying.
-    *   **Spellcheck Logic:** 
-        *   Uses "Few-Shot Prompting" (system + examples) to force strict JSON-like output behavior.
-        *   Calculates `simple-diff` to highlight changes (Red/Green).
-    *   **Chat Logic:** 
-        *   Automatically fetches page text via `fetchPageText()` (messaging content script).
-        *   Injects page text into the system prompt for Q&A.
+### 3. Page Chat & RAG
+*   **Mechanism:** Automatically extracts current tab content (`innerText`) up to ~15k chars.
+*   **Interface:** Chat-style interaction to ask questions about the page or request summaries.
 
-*   **`content.js`**:
-    *   **Text Replacement:** Tracks `lastActiveElement` across `focus`, `click`, and `input` events.
-    *   **Smart Fallback:** If the active element is lost, checks `window.getSelection()` to find the editable node.
-    *   **Page Reading:** Handles `get_page_content` message to return `document.body.innerText` (truncated to ~15k chars).
+## Reliability & Performance
+*   **Auto-Recovery:** Detects WebGPU "Context Lost" errors and automatically reloads the panel/engine.
+*   **Robust Wrapper:** `safeEngineCall` manages engine state, automatically re-initializing and retrying requests if the model is disposed or not loaded.
+*   **Debounced Input:** Manual spellcheck triggers 800ms after the user stops typing to save GPU cycles.
 
-*   **`background.js`**:
-    *   Service Worker.
-    *   Handles Context Menu click ("Local AI Spell Checker") -> Opens Side Panel -> Sends selected text.
+## Deployment & Hosting
+*   **Extension:** Packaged as a `.zip` for Chrome Web Store upload.
+*   **Website:** Hosted on Cloudflare Workers at **https://localai.alert24.org/**, serving static assets from the `public/` folder.
 
-## Features & Workflows
-
-### 1. Spell Check
-*   **Trigger:** Context Menu or Manual Input.
-*   **Processing:**
-    *   `generateText()` calls the LLM with a strict prompt.
-    *   Result is cleaned up (regex to remove preambles/explanations).
-    *   `diffWords()` computes a word-level diff.
-*   **Output:** Visual HTML diff.
-*   **Action:** "Replace Selection" button sends the fixed text to `content.js` to update the DOM element.
-
-### 2. Page Chat
-*   **Trigger:** "Page Chat" tab in Side Panel.
-*   **Context:** Automatically reads current tab content on every message send.
-*   **Interaction:** User asks question -> System prompt includes page context -> AI responds.
-
-### 3. Reliability System
-*   **Auto-Recovery:** If WebGPU crashes ("Context Lost"), the panel automatically attempts to reload itself or the model.
-*   **Retry Logic:** `safeEngineCall` catches disposal errors, re-inits the engine, and retries the prompt seamlessly.
-
-## Setup & Installation
-See `README.md` for user-facing instructions.
-
-### Development Notes
-*   **Models:** Stored in Browser Cache (Cache API) and `localStorage` tracks downloads.
-*   **Debugging:** Use `Right-Click Panel -> Inspect` to see console logs for raw LLM output and errors.
+## Setup & Maintenance
+Refer to `README.md` for installation instructions.
+For security, `.gitignore` is configured to exclude OS files, build artifacts, and potential secrets.
