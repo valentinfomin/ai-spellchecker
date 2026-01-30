@@ -1,49 +1,68 @@
-# AI Spellchecker
+# Local AI Spell Checker & Page Chat
 
 ## Project Overview
 
-**AI Spellchecker** is a Chrome Extension (Manifest V3) that leverages **WebLLM** (MLC-LLM) to perform grammar and spelling corrections locally in the browser. It allows users to select text on any webpage and process it using a locally running Large Language Model, ensuring privacy and offline capability (after initial model download).
+**Local AI** (formerly AI Spellchecker) is a privacy-first Chrome Extension (Manifest V3) that runs Large Language Models (LLMs) **locally in the browser** via **WebGPU**. 
 
-**Key Features:**
-*   **Local Inference:** Uses WebGPU to run LLMs client-side without sending data to external servers (once models are cached).
-*   **Context Menu Integration:** "Исправить ошибки (AI)" option in the right-click menu.
-*   **Automatic Replacement:** Can replace the text in the active input field or textarea after user confirmation.
-*   **Model Management:** Supports selecting and caching different prebuilt models compatible with WebLLM.
+It provides two main functionalities:
+1.  **Spell/Grammar Checking:** Context-aware correction with visual diffs and one-click replacement.
+2.  **Page Chat:** RAG-like capability to read the current webpage's content and answer questions or summarize it.
+
+**Key Technologies:**
+*   **WebLLM (MLC-LLM):** Core engine for in-browser inference.
+*   **Chrome Side Panel API:** Persistent UI that keeps the model loaded while browsing.
+*   **WebGPU:** Hardware acceleration for running 4-bit quantized models (Llama-3, Phi-3, etc.).
 
 ## Architecture
 
-*   **`manifest.json`**: Defines the extension configuration, permissions (`contextMenus`, `storage`, `activeTab`), and security policies (CSP allowing `wasm-unsafe-eval` for WebLLM).
-*   **`popup.html` / `popup.js`**:
-    *   Acts as the main interface and execution environment for the LLM.
-    *   Handles model initialization (`MLCEngine`), loading, and chat completion requests.
-    *   Contains the system prompt logic: "Act as an editor. 1. Fix grammar/tenses..."
-    *   Orchestrates the flow: Load Model -> Receive Text (from storage or input) -> Generate Fix -> Send to Content Script.
-*   **`background.js`**:
-    *   Service Worker that creates the context menu item.
-    *   On click, saves the selected text to `chrome.storage.local` and attempts to programmatically open the popup (`chrome.action.openPopup`) to start the background processing.
+*   **`manifest.json`**: 
+    *   Uses `sidePanel` permission for persistent UI.
+    *   `content_scripts` configured with `all_frames: true` to handle text in iframes.
+    *   CSP allows `wasm-unsafe-eval` for the LLM runtime.
+
+*   **`sidepanel.html` / `sidepanel.js`**:
+    *   **The Brain:** Hosts the `webllm.MLCEngine`.
+    *   **State Management:** Handles model loading (`CreateMLCEngine`), auto-recovery from WebGPU context loss, and tab switching (Spellcheck vs. Page Chat).
+    *   **Robustness:** Implements `safeEngineCall` wrapper to handle "Model not loaded" or "Object disposed" errors by automatically reloading the engine and retrying.
+    *   **Spellcheck Logic:** 
+        *   Uses "Few-Shot Prompting" (system + examples) to force strict JSON-like output behavior.
+        *   Calculates `simple-diff` to highlight changes (Red/Green).
+    *   **Chat Logic:** 
+        *   Automatically fetches page text via `fetchPageText()` (messaging content script).
+        *   Injects page text into the system prompt for Q&A.
+
 *   **`content.js`**:
-    *   Listens for the `apply_fix` message from the popup.
-    *   Locates the active DOM element (`textarea`, `input`, or `contentEditable`).
-    *   Prompts the user to confirm the change before replacing the text.
+    *   **Text Replacement:** Tracks `lastActiveElement` across `focus`, `click`, and `input` events.
+    *   **Smart Fallback:** If the active element is lost, checks `window.getSelection()` to find the editable node.
+    *   **Page Reading:** Handles `get_page_content` message to return `document.body.innerText` (truncated to ~15k chars).
 
-## Development & Usage
+*   **`background.js`**:
+    *   Service Worker.
+    *   Handles Context Menu click ("Local AI Spell Checker") -> Opens Side Panel -> Sends selected text.
 
-### Prerequisites
-*   A browser supporting **WebGPU** (e.g., modern Chrome, Edge).
-*   Models are downloaded from Hugging Face on first use.
+## Features & Workflows
 
-### Installation
-1.  Open Chrome and navigate to `chrome://extensions/`.
-2.  Enable "Developer mode".
-3.  Click **Load unpacked** and select this directory (`spellcheck`).
+### 1. Spell Check
+*   **Trigger:** Context Menu or Manual Input.
+*   **Processing:**
+    *   `generateText()` calls the LLM with a strict prompt.
+    *   Result is cleaned up (regex to remove preambles/explanations).
+    *   `diffWords()` computes a word-level diff.
+*   **Output:** Visual HTML diff.
+*   **Action:** "Replace Selection" button sends the fixed text to `content.js` to update the DOM element.
 
-### Workflow
-1.  **Select Text:** Highlight text in any input box or webpage.
-2.  **Context Menu:** Right-click and choose "Исправить ошибки (AI)".
-3.  **Processing:** The extension popup will open (or must be opened manually if the browser blocks it), load the model (if not loaded), and process the text.
-4.  **Result:** The fixed text appears in the popup.
-5.  **Apply:** The extension attempts to replace the selected text on the webpage, asking for confirmation first.
+### 2. Page Chat
+*   **Trigger:** "Page Chat" tab in Side Panel.
+*   **Context:** Automatically reads current tab content on every message send.
+*   **Interaction:** User asks question -> System prompt includes page context -> AI responds.
 
-### Key Code Paths
-*   **Prompt Logic:** Located in `popup.js` inside `generateText()`.
-*   **Model Configuration:** `web-llm.js` (library) and `popup.js` (model selection logic).
+### 3. Reliability System
+*   **Auto-Recovery:** If WebGPU crashes ("Context Lost"), the panel automatically attempts to reload itself or the model.
+*   **Retry Logic:** `safeEngineCall` catches disposal errors, re-inits the engine, and retries the prompt seamlessly.
+
+## Setup & Installation
+See `README.md` for user-facing instructions.
+
+### Development Notes
+*   **Models:** Stored in Browser Cache (Cache API) and `localStorage` tracks downloads.
+*   **Debugging:** Use `Right-Click Panel -> Inspect` to see console logs for raw LLM output and errors.
