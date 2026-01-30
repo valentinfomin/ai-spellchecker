@@ -126,19 +126,39 @@ async function safeEngineCall(messages, max_tokens, temperature) {
 async function fetchPageText() {
     try {
         const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
-        if (!tab) return "";
+        if (!tab) return { error: "No active tab found." };
 
-        // Manually inject content script if not already there (required due to strict manifest)
-        await chrome.scripting.executeScript({
-            target: { tabId: tab.id, allFrames: true },
-            files: ["content.js"]
-        });
+        // Check for restricted URLs
+        if (tab.url.startsWith("chrome://") || tab.url.startsWith("edge://") || tab.url.startsWith("about:") || tab.url.startsWith("chrome-extension://")) {
+            return { error: "Cannot read internal browser pages. Please try on a regular website." };
+        }
 
-        const response = await chrome.tabs.sendMessage(tab.id, { action: "get_page_content" });
-        return (response && response.content) ? response.content : "";
+        // Manually inject content script
+        try {
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id, allFrames: true },
+                files: ["content.js"]
+            });
+        } catch (scriptErr) {
+            console.warn("Injection failed (likely restricted page):", scriptErr);
+            return { error: "Access denied to this page. Try refreshing or using a different site." };
+        }
+
+        // Retry sending message up to 3 times (with 100ms delay) to ensure script is ready
+        for (let i = 0; i < 3; i++) {
+            try {
+                const response = await chrome.tabs.sendMessage(tab.id, { action: "get_page_content" });
+                if (response && response.content) return { content: response.content };
+            } catch (msgErr) {
+                if (i === 2) throw msgErr;
+                await new Promise(r => setTimeout(r, 150));
+            }
+        }
+        return { error: "Page is not responding. Try refreshing the page." };
+
     } catch (e) {
         console.warn("Could not read page:", e);
-        return "";
+        return { error: "Connection error. Please refresh the webpage and try again." };
     }
 }
 
@@ -162,12 +182,13 @@ async function sendChatMessage(userText, isSystemInstruction = false) {
     }
     
     // Always refresh context to ensure we are talking about the CURRENT page
-    pageContext = await fetchPageText();
+    const result = await fetchPageText();
     
-    if (!pageContext) {
-        appendMessage("system", "⚠️ Could not read page content. (Try refreshing the page)");
+    if (result.error) {
+        appendMessage("system", `⚠️ ${result.error}`);
         return;
     }
+    pageContext = result.content;
 
     appendMessage("user", userText);
     const loadingMsg = document.createElement("div");
