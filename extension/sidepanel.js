@@ -178,8 +178,18 @@ async function fetchPageText() {
         const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
         if (!tab) return { error: "No active tab found." };
 
-        // Inject content script into MAIN frame only (allFrames: false)
-        // This avoids access errors from restricted ad/tracker iframes
+        // 1. Check for URL access immediately
+        // If undefined, we have no permission.
+        if (!tab.url) {
+             return { error: "AI permission denied. Please click the Local AI icon in your toolbar or right-click to enable it for this page." };
+        }
+
+        // 2. Check for restricted URLs
+        if (tab.url.startsWith("chrome://") || tab.url.startsWith("edge://") || tab.url.startsWith("about:") || tab.url.startsWith("chrome-extension://")) {
+            return { error: "Cannot read internal browser pages. Please try on a regular website." };
+        }
+
+        // 3. Inject content script into MAIN frame only (allFrames: false)
         try {
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
@@ -232,8 +242,16 @@ async function sendChatMessage(userText, isSystemInstruction = false) {
     
     if (result.error) {
         appendMessage("system", `⚠️ ${result.error}`);
+        
+        // Show permission button if it's a permission error
+        if (result.error.includes("permission denied") || result.error.includes("Access denied")) {
+            permissionRequestDiv.style.display = "block";
+        }
         return;
     }
+    // Hide if successful
+    permissionRequestDiv.style.display = "none";
+    
     pageContext = result.content;
 
     appendMessage("user", userText);
