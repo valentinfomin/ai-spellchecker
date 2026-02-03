@@ -13,6 +13,8 @@ const chatHistory = document.getElementById("chat-history");
 const chatInput = document.getElementById("chat-input");
 const summarizeBtn = document.getElementById("summarizeBtn");
 const chatSendBtn = document.getElementById("chatSendBtn");
+const permissionRequestDiv = document.getElementById("permission-request");
+const grantAccessBtn = document.getElementById("grantAccessBtn");
 
 let engine = null;
 let lastResult = ""; 
@@ -41,6 +43,53 @@ async function initApp() {
         if (text) {
             sendChatMessage(text);
             chatInput.value = "";
+        }
+    };
+
+    // Permission Logic
+    grantAccessBtn.onclick = async () => {
+        try {
+            const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+            
+            // If URL is hidden (Chrome strict privacy), we cannot programmatically request permission
+            if (!tab || !tab.url) {
+                alert("Browser privacy settings are hiding this page's URL.\n\nPlease click the 'Local AI' icon in your browser toolbar (puzzle piece) to manually grant access.");
+                return;
+            }
+            
+            // Construct origin pattern (e.g., "https://example.com/*")
+            const urlObj = new URL(tab.url);
+            const origin = urlObj.origin + "/*";
+
+            console.log("Requesting permission for:", origin);
+
+            const granted = await chrome.permissions.request({
+                origins: [origin]
+            });
+
+            if (granted) {
+                permissionRequestDiv.style.display = "none";
+                appendMessage("system", "✅ Access granted. Reading page...");
+                
+                // Wait a moment for permission to propagate
+                setTimeout(async () => {
+                    // Retry fetching context
+                    const result = await fetchPageText();
+                    if (result.content) {
+                        pageContext = result.content;
+                        appendMessage("system", "Context loaded. Re-sending request...");
+                        // If there was a pending question (e.g. from summarize button), maybe re-trigger? 
+                        // For now, just confirming ready state is good.
+                    } else {
+                        appendMessage("system", "⚠️ Access granted, but read failed. Please try clicking Summarize again.");
+                    }
+                }, 500);
+            } else {
+                appendMessage("system", "❌ Access denied by user.");
+            }
+        } catch (e) {
+            console.error("Permission Request Error:", e);
+            appendMessage("system", "❌ Error requesting permission: " + e.message);
         }
     };
 
@@ -125,40 +174,37 @@ async function safeEngineCall(messages, max_tokens, temperature) {
 
 async function fetchPageText() {
     try {
+        // Find the active tab
         const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
         if (!tab) return { error: "No active tab found." };
 
-        // Check for restricted URLs
-        if (tab.url.startsWith("chrome://") || tab.url.startsWith("edge://") || tab.url.startsWith("about:") || tab.url.startsWith("chrome-extension://")) {
-            return { error: "Cannot read internal browser pages. Please try on a regular website." };
-        }
-
-        // Manually inject content script
+        // Inject content script into MAIN frame only (allFrames: false)
+        // This avoids access errors from restricted ad/tracker iframes
         try {
             await chrome.scripting.executeScript({
-                target: { tabId: tab.id, allFrames: true },
+                target: { tabId: tab.id },
                 files: ["content.js"]
             });
         } catch (scriptErr) {
-            console.warn("Injection failed (likely restricted page):", scriptErr);
-            return { error: "Access denied to this page. Try refreshing or using a different site." };
+            console.error("Script injection failed:", scriptErr.message);
+            
+            // Helpful errors for the user
+            if (tab.url && (tab.url.startsWith("chrome://") || tab.url.startsWith("about:"))) {
+                return { error: "Cannot read internal browser pages. Please try on a regular website." };
+            }
+            
+            // Show Grant Permission Button
+            permissionRequestDiv.style.display = "block";
+            return { error: "AI needs permission to read this page. Please click 'Grant Access' above." };
         }
 
-        // Retry sending message up to 3 times (with 100ms delay) to ensure script is ready
-        for (let i = 0; i < 3; i++) {
-            try {
-                const response = await chrome.tabs.sendMessage(tab.id, { action: "get_page_content" });
-                if (response && response.content) return { content: response.content };
-            } catch (msgErr) {
-                if (i === 2) throw msgErr;
-                await new Promise(r => setTimeout(r, 150));
-            }
-        }
-        return { error: "Page is not responding. Try refreshing the page." };
+        // Request page content from the script
+        const response = await chrome.tabs.sendMessage(tab.id, { action: "get_page_content" });
+        return (response && response.content) ? { content: response.content } : { error: "Could not read page. Please refresh and try again." };
 
     } catch (e) {
-        console.warn("Could not read page:", e);
-        return { error: "Connection error. Please refresh the webpage and try again." };
+        console.error("fetchPageText Error:", e);
+        return { error: `Connection failed. Try clicking the extension icon to wake it up.` };
     }
 }
 
