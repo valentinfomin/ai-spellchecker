@@ -220,7 +220,10 @@ async function safeEngineCall(messages, max_tokens, temperature) {
 
             // Force reload
             await loadModel();
-            if (!engine) throw new Error("Auto-reload failed.");
+            if (!engine) {
+                const errorDisplay = status.innerText.includes("❌") ? status.innerText : "Auto-reload failed.";
+                throw new Error(errorDisplay);
+            }
 
             // Retry once
             return await engine.chat.completions.create({ messages, max_tokens, temperature });
@@ -359,9 +362,11 @@ async function sendChatMessage(userText, isSystemInstruction = false) {
 async function loadModel() {
     // Check for WebGPU support first
     if (!navigator.gpu) {
-        status.innerHTML = "❌ WebGPU is not supported.";
+        status.innerHTML = "❌ WebGPU is not supported in this browser.";
         return;
     }
+
+    status.innerHTML = "🚀 Initializing..."; // Clear previous errors/status
 
     if (engine) {
         try {
@@ -424,6 +429,8 @@ async function loadModel() {
 
             errorMsg = "WebGPU Context Lost. <span id='manualReload' style='cursor:pointer; font-weight:bold;' title='Click to reload'>⟳</span>";
             sessionStorage.removeItem("retry_count"); // Reset for next time
+        } else if (errorMsg.includes("Unable to find a compatible GPU")) {
+            errorMsg = "<b>Unable to find a compatible GPU.</b><br><br>This can happen if WebGPU is disabled, your drivers are outdated, or your browser is starving for resources. Try restarting Chrome.";
         }
         status.innerHTML = `❌ ${errorMsg}`;
 
