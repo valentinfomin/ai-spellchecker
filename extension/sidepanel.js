@@ -442,7 +442,18 @@ async function generateText() {
     output.innerText = "Analyzing...";
 
     try {
-        const dynamicMaxTokens = Math.max(128, Math.ceil(text.length / 1.5));
+        const modelLimit = getContextWindow(modelSelect.value);
+        const systemPromptTokens = 150; // Approx for system instructions + examples
+        const maxPromptTokens = modelLimit - systemPromptTokens - 200; // Leave room for response
+
+        let processedText = text;
+        if (estimateTokens(text) > maxPromptTokens) {
+            const charLimit = maxPromptTokens * 4;
+            processedText = text.substring(0, charLimit);
+            output.innerHTML = "⚠️ Note: Text is too long. Truncating for analysis...<br><br>Analyzing...";
+        }
+
+        const dynamicMaxTokens = Math.max(128, Math.ceil(processedText.length / 1.5));
 
         const reply = await safeEngineCall([
             { role: "system", content: "You are a specialized spellchecker. Fix all grammar, spelling, punctuation, and capitalization errors. Output ONLY the corrected text. Do NOT explain." },
@@ -450,7 +461,7 @@ async function generateText() {
             { role: "assistant", content: "Hello sword" },
             { "role": "user", "content": "Correct this text:\n\ni has a apple" },
             { "role": "assistant", "content": "I have an apple." },
-            { role: "user", content: `Correct this text:\n\n${text}` }
+            { role: "user", content: `Correct this text:\n\n${processedText}` }
         ], dynamicMaxTokens, 0.0);
 
         console.log("Raw Reply:", reply);
