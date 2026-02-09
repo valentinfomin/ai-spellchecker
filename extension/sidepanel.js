@@ -46,14 +46,26 @@ async function initApp() {
         }
     };
 
-    // Permission Logic
+    // Permission Logic: Requesting access to the current page
     grantAccessBtn.onclick = async () => {
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-            // If URL is hidden (Chrome strict privacy), we cannot programmatically request permission
             if (!tab || !tab.url) {
-                alert("Browser privacy settings are hiding this page's URL.\n\nPlease click the 'Local AI' icon in your browser toolbar (puzzle piece) to manually grant access.");
+                // If URL is hidden, we can't request a "specific" origin. 
+                // We offer the user to grant "All Sites" or manually click the icon.
+                const authorizeAll = confirm("Browser privacy settings are hiding this page's URL.\n\nTo allow Local AI to work on any page automatically, would you like to grant 'All Sites' access?\n\nOtherwise, please click the 'Local AI' icon in your toolbar to grant access one-by-one.");
+
+                if (authorizeAll) {
+                    const granted = await chrome.permissions.request({
+                        origins: ["<all_urls>"]
+                    });
+                    if (granted) {
+                        permissionRequestDiv.style.display = "none";
+                        appendMessage("system", "✅ 'All Sites' access granted.");
+                        location.reload(); // Refresh to catch changes
+                    }
+                }
                 return;
             }
 
@@ -61,35 +73,18 @@ async function initApp() {
             const urlObj = new URL(tab.url);
             const origin = urlObj.origin + "/*";
 
-            console.log("Requesting permission for:", origin);
-
             const granted = await chrome.permissions.request({
                 origins: [origin]
             });
 
             if (granted) {
                 permissionRequestDiv.style.display = "none";
-                appendMessage("system", "✅ Access granted. Reading page...");
-
-                // Wait a moment for permission to propagate
-                setTimeout(async () => {
-                    // Retry fetching context
-                    const result = await fetchPageText();
-                    if (result.content) {
-                        pageContext = result.content;
-                        appendMessage("system", "Context loaded. Re-sending request...");
-                        // If there was a pending question (e.g. from summarize button), maybe re-trigger? 
-                        // For now, just confirming ready state is good.
-                    } else {
-                        appendMessage("system", "⚠️ Access granted, but read failed. Please try clicking Summarize again.");
-                    }
-                }, 500);
-            } else {
-                appendMessage("system", "❌ Access denied by user.");
+                appendMessage("system", "✅ Access granted to this site.");
+                setTimeout(() => location.reload(), 500);
             }
         } catch (e) {
             console.error("Permission Request Error:", e);
-            appendMessage("system", "❌ Error requesting permission: " + e.message);
+            appendMessage("system", "❌ Error: " + e.message);
         }
     };
 
@@ -169,6 +164,14 @@ async function initApp() {
     // Always attach the listener
     runBtn.onclick = loadModel;
 
+    // Proactive check for tab access
+    chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+        if (!tab || !tab.url) {
+            // Probably lacks permission for this site or is a restricted page
+            permissionRequestDiv.style.display = "block";
+        }
+    });
+
     if (autoLoad) {
         modelSelect.value = autoLoad;
         loadModel();
@@ -183,14 +186,24 @@ async function initApp() {
     // Attach Replace Button Listener
     replaceBtn.onclick = async () => {
         if (!lastResult) return;
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab) {
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+            if (!tab || !tab.url) {
+                permissionRequestDiv.style.display = "block";
+                return;
+            }
+
             // Ensure script is injected
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id, allFrames: true },
                 files: ["content.js"]
             });
             chrome.tabs.sendMessage(tab.id, { action: "apply_fix", text: lastResult });
+            permissionRequestDiv.style.display = "none";
+        } catch (e) {
+            console.error("Replace Error:", e);
+            permissionRequestDiv.style.display = "block";
         }
     };
 }
