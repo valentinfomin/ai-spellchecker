@@ -18,6 +18,17 @@ const grantAccessBtn = document.getElementById("grantAccessBtn");
 
 let engine = null;
 let lastResult = "";
+let isModelLoading = false;
+let isProcessing = false;
+
+function setUIBusy(busy) {
+    promptInput.disabled = busy;
+    chatInput.disabled = busy;
+    summarizeBtn.disabled = busy;
+    chatSendBtn.disabled = busy;
+    runBtn.disabled = busy || isModelLoading;
+    modelSelect.disabled = busy || isModelLoading;
+}
 
 async function getDownloadedModels() {
     return JSON.parse(localStorage.getItem("downloaded_params") || "[]");
@@ -36,8 +47,12 @@ async function initApp() {
     });
 
     // Chat Logic
-    summarizeBtn.onclick = () => sendChatMessage("Summarize this page in 3 bullet points.", true);
+    summarizeBtn.onclick = () => {
+        if (isProcessing || isModelLoading) return;
+        sendChatMessage("Summarize this page in 3 bullet points.", true);
+    };
     chatSendBtn.onclick = () => {
+        if (isProcessing || isModelLoading) return;
         const text = chatInput.value.trim();
         if (text) {
             sendChatMessage(text);
@@ -161,7 +176,9 @@ async function initApp() {
     updateButtonText();
 
     // Always attach the listener
-    runBtn.onclick = loadModel;
+    runBtn.onclick = () => {
+        if (!isModelLoading) loadModel();
+    };
 
     // Proactive check for tab access
     chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
@@ -301,7 +318,9 @@ function appendMessage(role, text) {
 }
 
 async function sendChatMessage(userText, isSystemInstruction = false) {
-    // Ensure engine is at least nominally present (safeEngineCall will fix if broken)
+    if (isProcessing || isModelLoading) return;
+
+    // Ensure engine is nominally present
     if (!engine) {
         appendMessage("system", "⚠️ Model not ready. Auto-loading...");
         await loadModel();
@@ -310,6 +329,9 @@ async function sendChatMessage(userText, isSystemInstruction = false) {
             return;
         }
     }
+
+    isProcessing = true;
+    setUIBusy(true);
 
     // Always refresh context to ensure we are talking about the CURRENT page
     const result = await fetchPageText();
@@ -354,12 +376,19 @@ async function sendChatMessage(userText, isSystemInstruction = false) {
         appendMessage("ai", aiText);
 
     } catch (e) {
-        chatHistory.removeChild(loadingMsg);
+        if (loadingMsg.parentNode) chatHistory.removeChild(loadingMsg);
         appendMessage("system", "Error: " + e.message);
+    } finally {
+        isProcessing = false;
+        setUIBusy(false);
     }
 }
 
 async function loadModel() {
+    if (isModelLoading) return;
+    isModelLoading = true;
+    setUIBusy(true);
+
     // Check for WebGPU support first
     if (!navigator.gpu) {
         status.innerHTML = "❌ WebGPU is not supported in this browser.";
@@ -436,12 +465,19 @@ async function loadModel() {
 
         const reloadIcon = document.getElementById('manualReload');
         if (reloadIcon) reloadIcon.onclick = () => location.reload();
+    } finally {
+        isModelLoading = false;
+        setUIBusy(false);
     }
 }
 
 async function generateText() {
+    if (isProcessing || isModelLoading) return;
     const text = promptInput.value.trim();
     if (!text || !engine) return;
+
+    isProcessing = true;
+    setUIBusy(true);
 
     runBtn.disabled = true;
     replaceBtn.style.display = "none"; // Hide previous button
@@ -518,10 +554,9 @@ async function generateText() {
         // Show Replace Button
         replaceBtn.style.display = "block";
 
-    } catch (e) {
-        output.innerText = "Error: " + e.message;
     } finally {
-        runBtn.disabled = false;
+        isProcessing = false;
+        setUIBusy(false);
     }
 }
 
