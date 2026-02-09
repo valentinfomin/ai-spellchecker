@@ -37,6 +37,8 @@ The project implements the **Principle of Least Privilege**:
 ### 3. Reliability System
 *   **Auto-Recovery:** Detects `Object disposed` or `Context lost` errors. It automatically triggers an engine re-initialization and retries the user's request.
 *   **Safe Wrapper:** `safeEngineCall` acts as a middleman for all LLM calls, managing the engine's lifecycle transparently.
+*   **Hardware Compatibility Engine:** Detects supported WebGPU features (e.g., `shader-f16`) and filters the model list to prevent runtime crashes. Includes heuristics for models with incomplete metadata.
+*   **Advanced Permission Handling:** Resolves "Hidden URL" roadblocks by offering "All Sites" access as a fail-safe, ensuring functionality on restricted pages.
 
 ## Deployment
 *   **Plugin:** Uploaded to Chrome Web Store via ZIP.
