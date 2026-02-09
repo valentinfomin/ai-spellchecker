@@ -17,7 +17,7 @@ const permissionRequestDiv = document.getElementById("permission-request");
 const grantAccessBtn = document.getElementById("grantAccessBtn");
 
 let engine = null;
-let lastResult = ""; 
+let lastResult = "";
 let pageContext = ""; // Stores the current page text
 
 async function getDownloadedModels() {
@@ -30,7 +30,7 @@ async function initApp() {
         btn.onclick = () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
+
             btn.classList.add('active');
             document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
         };
@@ -49,14 +49,14 @@ async function initApp() {
     // Permission Logic
     grantAccessBtn.onclick = async () => {
         try {
-            const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
-            
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
             // If URL is hidden (Chrome strict privacy), we cannot programmatically request permission
             if (!tab || !tab.url) {
                 alert("Browser privacy settings are hiding this page's URL.\n\nPlease click the 'Local AI' icon in your browser toolbar (puzzle piece) to manually grant access.");
                 return;
             }
-            
+
             // Construct origin pattern (e.g., "https://example.com/*")
             const urlObj = new URL(tab.url);
             const origin = urlObj.origin + "/*";
@@ -70,7 +70,7 @@ async function initApp() {
             if (granted) {
                 permissionRequestDiv.style.display = "none";
                 appendMessage("system", "✅ Access granted. Reading page...");
-                
+
                 // Wait a moment for permission to propagate
                 setTimeout(async () => {
                     // Retry fetching context
@@ -93,19 +93,61 @@ async function initApp() {
         }
     };
 
+    // Detect WebGPU Features
+    let supportedFeatures = [];
+    if (navigator.gpu) {
+        try {
+            const adapter = await navigator.gpu.requestAdapter();
+            if (adapter) {
+                supportedFeatures = Array.from(adapter.features);
+                console.log("Supported WebGPU Features:", supportedFeatures);
+            }
+        } catch (e) {
+            console.warn("GPU Adapter request failed:", e);
+        }
+    }
+
     const downloaded = await getDownloadedModels();
-    const modelList = webllm.prebuiltAppConfig.model_list.map(m => m.model_id);
+
+    // Filter models:
+    // 1. Exclude embedding models (type 1)
+    // 2. Exclude models missing required WebGPU features (e.g. shader-f16)
+    const modelList = webllm.prebuiltAppConfig.model_list.filter(m => {
+        if (m.model_type === 1) return false;
+
+        let required = m.required_features || [];
+        // Heuristic: models with q4f16 usually require shader-f16
+        if (m.model_id.includes("q4f16") && !required.includes("shader-f16")) {
+            required = [...required, "shader-f16"];
+        }
+
+        if (required.length > 0) {
+            return required.every(feature => supportedFeatures.includes(feature));
+        }
+        return true;
+    });
+
     modelSelect.innerHTML = "";
     let autoLoad = null;
 
-    modelList.forEach(modelId => {
+    const formatSize = (mb) => {
+        if (!mb) return "";
+        if (mb >= 1024) {
+            return `(${(mb / 1024).toFixed(1)} GB)`;
+        }
+        return `(${mb} MB)`;
+    };
+
+    modelList.forEach(model => {
         const option = document.createElement("option");
-        option.value = modelId;
-        if (downloaded.includes(modelId)) {
-            option.text = `💾 ${modelId}`;
-            if (!autoLoad) autoLoad = modelId;
+        option.value = model.model_id;
+        const sizeText = formatSize(model.vram_required_MB);
+
+        if (downloaded.includes(model.model_id)) {
+            option.text = `💾 ${model.model_id} ${sizeText}`;
+            if (!autoLoad) autoLoad = model.model_id;
         } else {
-            option.text = modelId;
+            option.text = `${model.model_id} ${sizeText}`;
         }
         modelSelect.appendChild(option);
     });
@@ -123,22 +165,25 @@ async function initApp() {
     };
 
     updateButtonText();
-    
+
     // Always attach the listener
     runBtn.onclick = loadModel;
 
     if (autoLoad) {
         modelSelect.value = autoLoad;
-        loadModel(); 
-    } else {
+        loadModel();
+    } else if (modelList.length > 0) {
         runBtn.disabled = false;
         status.innerText = "Select a model to start.";
+    } else {
+        runBtn.disabled = true;
+        status.innerHTML = "❌ No compatible models found for your GPU.";
     }
 
     // Attach Replace Button Listener
     replaceBtn.onclick = async () => {
         if (!lastResult) return;
-        const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab) {
             // Ensure script is injected
             await chrome.scripting.executeScript({
@@ -160,7 +205,7 @@ async function safeEngineCall(messages, max_tokens, temperature) {
         if (msg.includes("model not loaded") || msg.includes("disposed") || msg.includes("instance reference")) {
             console.warn("Engine state invalid. Attempting auto-reload...", e);
             appendMessage("system", "⚠️ Connection lost. Reconnecting..."); // Feedback for chat users
-            
+
             // Force reload
             await loadModel();
             if (!engine) throw new Error("Auto-reload failed.");
@@ -175,13 +220,13 @@ async function safeEngineCall(messages, max_tokens, temperature) {
 async function fetchPageText() {
     try {
         // Find the active tab
-        const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab) return { error: "No active tab found." };
 
         // 1. Check for URL access immediately
         // If undefined, we have no permission.
         if (!tab.url) {
-             return { error: "AI permission denied. Please click the Local AI icon in your toolbar or right-click to enable it for this page." };
+            return { error: "AI permission denied. Please click the Local AI icon in your toolbar or right-click to enable it for this page." };
         }
 
         // 2. Check for restricted URLs
@@ -197,12 +242,12 @@ async function fetchPageText() {
             });
         } catch (scriptErr) {
             console.error("Script injection failed:", scriptErr.message);
-            
+
             // Helpful errors for the user
             if (tab.url && (tab.url.startsWith("chrome://") || tab.url.startsWith("about:"))) {
                 return { error: "Cannot read internal browser pages. Please try on a regular website." };
             }
-            
+
             // Show Grant Permission Button
             permissionRequestDiv.style.display = "block";
             return { error: "AI needs permission to read this page. Please click 'Grant Access' above." };
@@ -236,13 +281,13 @@ async function sendChatMessage(userText, isSystemInstruction = false) {
             return;
         }
     }
-    
+
     // Always refresh context to ensure we are talking about the CURRENT page
     const result = await fetchPageText();
-    
+
     if (result.error) {
         appendMessage("system", `⚠️ ${result.error}`);
-        
+
         // Show permission button if it's a permission error
         if (result.error.includes("permission denied") || result.error.includes("Access denied")) {
             permissionRequestDiv.style.display = "block";
@@ -251,7 +296,7 @@ async function sendChatMessage(userText, isSystemInstruction = false) {
     }
     // Hide if successful
     permissionRequestDiv.style.display = "none";
-    
+
     pageContext = result.content;
 
     appendMessage("user", userText);
@@ -284,9 +329,9 @@ async function loadModel() {
     }
 
     if (engine) {
-        try { 
+        try {
             // Attempt to unload nicely
-            await engine.unload(); 
+            await engine.unload();
         } catch (e) {
             console.warn("Unload error (likely already disposed):", e);
         }
@@ -305,7 +350,7 @@ async function loadModel() {
             },
             low_resource_mode: true
         });
-        
+
         let downloaded = await getDownloadedModels();
         if (!downloaded.includes(selectedModel)) {
             downloaded.push(selectedModel);
@@ -313,7 +358,7 @@ async function loadModel() {
         }
         status.innerText = `✅ Ready`;
         runBtn.style.display = "none";
-        
+
         // Auto-trigger when typing
         let debounceTimer;
         promptInput.addEventListener('input', () => {
@@ -330,23 +375,23 @@ async function loadModel() {
         console.error("Load Model Error:", e);
         engine = null;
         runBtn.disabled = false;
-        
+
         let errorMsg = e.message;
         if (errorMsg.includes("Instance reference") || errorMsg.includes("disposed") || errorMsg.includes("Context Lost")) {
-             // Attempt auto-recovery once
-             const retries = parseInt(sessionStorage.getItem("retry_count") || "0");
-             if (retries < 1) {
-                 status.innerText = "⚠️ GPU Context lost. Auto-recovering...";
-                 sessionStorage.setItem("retry_count", retries + 1);
-                 setTimeout(() => location.reload(), 500);
-                 return;
-             }
-             
-             errorMsg = "WebGPU Context Lost. <span id='manualReload' style='cursor:pointer; font-weight:bold;' title='Click to reload'>⟳</span>";
-             sessionStorage.removeItem("retry_count"); // Reset for next time
+            // Attempt auto-recovery once
+            const retries = parseInt(sessionStorage.getItem("retry_count") || "0");
+            if (retries < 1) {
+                status.innerText = "⚠️ GPU Context lost. Auto-recovering...";
+                sessionStorage.setItem("retry_count", retries + 1);
+                setTimeout(() => location.reload(), 500);
+                return;
+            }
+
+            errorMsg = "WebGPU Context Lost. <span id='manualReload' style='cursor:pointer; font-weight:bold;' title='Click to reload'>⟳</span>";
+            sessionStorage.removeItem("retry_count"); // Reset for next time
         }
         status.innerHTML = `❌ ${errorMsg}`;
-        
+
         const reloadIcon = document.getElementById('manualReload');
         if (reloadIcon) reloadIcon.onclick = () => location.reload();
     }
@@ -384,16 +429,16 @@ async function generateText() {
         // 1. If result contains quotes and looks like: Here is the text: "Fixed Text", extract the quotes.
         // But be careful not to extract quotes IF the original text had quotes.
         const quoteMatch = result.match(/"([^"]+)"/);
-        if (quoteMatch && result.length > text.length * 2) { 
-             // If result is much longer than input, it likely contains explanations + quoted answer.
-             // We take the quoted part.
-             result = quoteMatch[1];
+        if (quoteMatch && result.length > text.length * 2) {
+            // If result is much longer than input, it likely contains explanations + quoted answer.
+            // We take the quoted part.
+            result = quoteMatch[1];
         }
 
         // 2. Remove known explanation patterns
         result = result.replace(/^(The text is|Here is|I have|I changed|Note:|Corrected:|Revised:).*/i, "")
-                       .replace(/(\n|^)(I changed|I have|The text|Here is|Note:).*/gs, "") // Remove trailing explanations
-                       .trim();
+            .replace(/(\n|^)(I changed|I have|The text|Here is|Note:).*/gs, "") // Remove trailing explanations
+            .trim();
 
         if (!result) {
             output.innerHTML = "⚠️ Empty response. Try a different model or rephrase.";
