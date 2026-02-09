@@ -18,7 +18,6 @@ const grantAccessBtn = document.getElementById("grantAccessBtn");
 
 let engine = null;
 let lastResult = "";
-let pageContext = ""; // Stores the current page text
 
 async function getDownloadedModels() {
     return JSON.parse(localStorage.getItem("downloaded_params") || "[]");
