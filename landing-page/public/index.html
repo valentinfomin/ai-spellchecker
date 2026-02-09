@@ -1,28 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Local AI - Private, In-Browser Intelligence</title>
-    <meta name="description" content="Privacy-first AI assistant running 100% locally in your browser. Spell check, grammar fixes, and page summarization without data tracking.">
+    <meta name="description"
+        content="Privacy-first AI assistant running 100% locally in your browser. Spell check, grammar fixes, and page summarization without data tracking.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2563eb; /* Blue 600 */
-            --primary-hover: #1d4ed8; /* Blue 700 */
+            --primary: #2563eb;
+            /* Blue 600 */
+            --primary-hover: #1d4ed8;
+            /* Blue 700 */
             --bg: #ffffff;
-            --bg-alt: #f8fafc; /* Slate 50 */
-            --text-main: #0f172a; /* Slate 900 */
-            --text-muted: #64748b; /* Slate 500 */
-            --border: #e2e8f0; /* Slate 200 */
+            --bg-alt: #f8fafc;
+            /* Slate 50 */
+            --text-main: #0f172a;
+            /* Slate 900 */
+            --text-muted: #64748b;
+            /* Slate 500 */
+            --border: #e2e8f0;
+            /* Slate 200 */
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'Inter', system-ui, sans-serif;
@@ -32,7 +42,11 @@
             line-height: 1.6;
         }
 
-        a { text-decoration: none; color: inherit; transition: 0.2s; }
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: 0.2s;
+        }
 
         .container {
             max-width: 1024px;
@@ -56,14 +70,17 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .nav-links a {
             margin-left: 2rem;
             color: var(--text-muted);
             font-weight: 500;
             font-size: 0.95rem;
         }
-        .nav-links a:hover { color: var(--primary); }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
 
         /* Hero Section */
         .hero {
@@ -83,6 +100,7 @@
         h1 span {
             background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -110,6 +128,7 @@
             color: white;
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
         }
+
         .btn-primary:hover {
             background-color: var(--primary-hover);
             transform: translateY(-2px);
@@ -122,6 +141,7 @@
             color: var(--text-main);
             margin-left: 1rem;
         }
+
         .btn-outline:hover {
             border-color: var(--text-muted);
             background-color: var(--bg-alt);
@@ -136,7 +156,7 @@
             overflow: hidden;
             background: white;
         }
-        
+
         .browser-mockup img {
             display: block;
             width: 100%;
@@ -166,6 +186,7 @@
             border: 1px solid var(--border);
             transition: transform 0.2s;
         }
+
         .feature-card:hover {
             transform: translateY(-5px);
             box-shadow: var(--shadow-md);
@@ -184,8 +205,16 @@
             margin-bottom: 1.5rem;
         }
 
-        h3 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.75rem; }
-        p { color: var(--text-muted); margin: 0; }
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.75rem;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin: 0;
+        }
 
         /* Footer */
         footer {
@@ -194,17 +223,32 @@
             color: var(--text-muted);
             font-size: 0.9rem;
         }
-        
-        .heart { color: #ef4444; }
+
+        .heart {
+            color: #ef4444;
+        }
 
         @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            .hero p { font-size: 1.1rem; }
-            .btn { width: 100%; margin: 0.5rem 0 0; }
-            .btn-outline { margin-left: 0; }
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .btn {
+                width: 100%;
+                margin: 0.5rem 0 0;
+            }
+
+            .btn-outline {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <div class="container">
@@ -220,10 +264,12 @@
 
         <section class="hero">
             <h1>Your Browser,<br><span>Now Intelligent.</span></h1>
-            <p>Summarize webpages, fix grammar, and chat with your content—all while keeping your data 100% private on your device.</p>
-            
+            <p>Summarize webpages, fix grammar, and chat with your content—all while keeping your data 100% private on
+                your device.</p>
+
             <div class="cta-buttons">
-                <a href="#" class="btn btn-primary">Add to Chrome (Free)</a>
+                <a href="https://chromewebstore.google.com/detail/local-ai-private-spell-ch/"
+                    class="btn btn-primary">Add to Chrome (Free)</a>
                 <a href="https://github.com/valentinfomin/ai-spellchecker" class="btn btn-outline">View on GitHub</a>
             </div>
 
@@ -240,7 +286,8 @@
                 <div class="feature-card">
                     <div class="icon">🔒</div>
                     <h3>Private by Design</h3>
-                    <p>No cloud servers. No API keys. Your data stays on your computer using advanced WebGPU technology.</p>
+                    <p>No cloud servers. No API keys. Your data stays on your computer using advanced WebGPU technology.
+                    </p>
                 </div>
                 <div class="feature-card">
                     <div class="icon">📝</div>
@@ -259,9 +306,11 @@
     <footer>
         <div class="container">
             <p>Open Source Project &bull; Built with <span class="heart">❤</span> by Michael & Co</p>
-            <p style="margin-top: 10px;"><a href="/privacypolicy.html" style="color: var(--text-muted); text-decoration: underline;">Privacy Policy</a></p>
+            <p style="margin-top: 10px;"><a href="/privacypolicy.html"
+                    style="color: var(--text-muted); text-decoration: underline;">Privacy Policy</a></p>
         </div>
     </footer>
 
 </body>
+
 </html>
