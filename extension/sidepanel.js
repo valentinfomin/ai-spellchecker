@@ -230,6 +230,20 @@ async function safeEngineCall(messages, max_tokens, temperature) {
     }
 }
 
+// Helper: Get context window limit for a model from metadata
+function getContextWindow(modelId) {
+    const model = webllm.prebuiltAppConfig.model_list.find(m => m.model_id === modelId);
+    if (model && model.overrides && model.overrides.context_window_size) {
+        return model.overrides.context_window_size;
+    }
+    return 4096; // Standard fallback for modern models
+}
+
+// Helper: Rough estimate of token count (1 token ≈ 4 characters)
+function estimateTokens(text) {
+    return Math.ceil((text || "").length / 4);
+}
+
 async function fetchPageText() {
     try {
         // Find the active tab
@@ -310,7 +324,16 @@ async function sendChatMessage(userText, isSystemInstruction = false) {
     // Hide if successful
     permissionRequestDiv.style.display = "none";
 
-    pageContext = result.content;
+    let pageContext = result.content;
+    const modelLimit = getContextWindow(modelSelect.value);
+    const safeBuffer = 800; // Buffer for instructions, questions, and AI response headroom
+    const maxContextTokens = modelLimit - safeBuffer;
+
+    if (estimateTokens(pageContext) > maxContextTokens) {
+        const charLimit = maxContextTokens * 4;
+        pageContext = pageContext.substring(0, charLimit);
+        appendMessage("system", "⚠️ Note: Page content is too long for this model. Truncating to fit memory...");
+    }
 
     appendMessage("user", userText);
     const loadingMsg = document.createElement("div");
