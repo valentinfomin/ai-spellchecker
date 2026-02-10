@@ -1,43 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy - Local AI</title>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Outfit:wght@600;800&display=swap"
+        rel="stylesheet">
+
     <style>
         :root {
-            --primary: #2563eb;
-            --bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
+            --bg: #05070a;
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --primary: #3b82f6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
-        body { font-family: 'Inter', sans-serif; margin: 0; color: var(--text-main); line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
-        
-        nav { padding: 1.5rem 0; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
-        .logo { font-weight: 800; font-size: 1.25rem; color: var(--primary); text-decoration: none; }
-        .nav-links a { margin-left: 1.5rem; color: var(--text-muted); text-decoration: none; font-weight: 500; }
-        .nav-links a:hover { color: var(--primary); }
 
-        h1 { font-size: 2.5rem; margin-top: 3rem; margin-bottom: 0.5rem; }
-        .date { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem; }
-        
-        h2 { margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
-        h3 { margin-top: 1.5rem; font-size: 1.1rem; }
-        p, li { color: var(--text-muted); margin-bottom: 1rem; }
-        ul { padding-left: 1.2rem; }
-        
-        footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); text-align: center; font-size: 0.9rem; color: var(--text-muted); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(rgba(5, 7, 10, 0.9), rgba(5, 7, 10, 0.9)),
+                url('/assets/ai_hero.png');
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            color: white;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Navbar */
+        nav {
+            padding: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Content Area */
+        .content-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            padding: 3rem;
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            margin-bottom: 4rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .date {
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            font-size: 0.9rem;
+        }
+
+        h2 {
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p,
+        li {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        ul {
+            padding-left: 1.2rem;
+        }
+
+        footer {
+            padding: 4rem 0;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
+
 <body>
+
     <div class="container">
         <nav>
-            <a href="/" class="logo">⚡ Local AI</a>
+            <a href="/" class="logo">Local AI</a>
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="/support">Support</a>
@@ -45,39 +173,53 @@
             </div>
         </nav>
 
-        <h1>Privacy Policy for AI Spellchecker</h1>
-        <div class="date">Last Updated: January 30, 2026</div>
+        <div class="content-card">
+            <h1>Privacy Policy</h1>
+            <div class="date">Last Updated: January 30, 2026</div>
 
-        <p>This Privacy Policy explains how AI Spellchecker ("the Extension") handles user information. Our core principle is that your data belongs to you.</p>
+            <p>This Privacy Policy explains how AI Spellchecker ("the Extension") handles user information. Our core
+                principle is that your data belongs to you.</p>
 
-        <h2>1. Data Collection and Transmission</h2>
-        <p>AI Spellchecker is designed with a "local-first" architecture:</p>
-        <ul>
-            <li><strong>No Data Collection:</strong> We do not collect, store, or transmit any personally identifiable information (PII), browsing history, or text content to external servers.</li>
-            <li><strong>Local Processing:</strong> All text analysis and grammar corrections are performed locally on your device using WebGPU and WebAssembly technology.</li>
-            <li><strong>No Cloud Storage:</strong> Your text is never stored in any cloud database by this extension.</li>
-        </ul>
+            <h2>1. Data Collection and Transmission</h2>
+            <p>AI Spellchecker is designed with a "local-first" architecture:</p>
+            <ul>
+                <li><strong>No Data Collection:</strong> We do not collect, store, or transmit any personally
+                    identifiable information (PII), browsing history, or text content to external servers.</li>
+                <li><strong>Local Processing:</strong> All text analysis and grammar corrections are performed locally
+                    on your device using WebGPU and WebAssembly technology.</li>
+                <li><strong>No Cloud Storage:</strong> Your text is never stored in any cloud database by this
+                    extension.</li>
+            </ul>
 
-        <h2>2. Permissions Usage</h2>
-        <p>To function correctly, the extension requires the following permissions:</p>
-        <ul>
-            <li><strong>activeTab & host_permissions:</strong> Used solely to read the text you highlight and insert the corrected version back into the input field.</li>
-            <li><strong>storage:</strong> Used only to cache AI model weights on your local machine to improve performance and avoid repeated downloads.</li>
-            <li><strong>contextMenus:</strong> Used to provide the "Fix grammar (AI)" option in your browser's right-click menu.</li>
-        </ul>
+            <h2>2. Permissions Usage</h2>
+            <p>To function correctly, the extension requires the following permissions:</p>
+            <ul>
+                <li><strong>activeTab & host_permissions:</strong> Used solely to read the text you highlight and insert
+                    the corrected version back into the input field.</li>
+                <li><strong>storage:</strong> Used only to cache AI model weights on your local machine to improve
+                    performance and avoid repeated downloads.</li>
+                <li><strong>contextMenus:</strong> Used to provide the "Fix grammar (AI)" option in your browser's
+                    right-click menu.</li>
+            </ul>
 
-        <h2>3. Third-Party Services</h2>
-        <p>The Extension uses the WebLLM library to run AI models locally. No data is shared with any third-party AI providers (such as OpenAI or Google) during the correction process.</p>
+            <h2>3. Third-Party Services</h2>
+            <p>The Extension uses the WebLLM library to run AI models locally. No data is shared with any third-party AI
+                providers (such as OpenAI or Google) during the correction process.</p>
 
-        <h2>4. Data Security</h2>
-        <p>Since no data is transmitted or stored remotely, there is no risk of your data being intercepted from our servers. We rely on the native security sandboxing provided by the Chrome browser to protect the local execution environment.</p>
+            <h2>4. Data Security</h2>
+            <p>Since no data is transmitted or stored remotely, there is no risk of your data being intercepted from our
+                servers. We rely on the native security sandboxing provided by the Chrome browser to protect the local
+                execution environment.</p>
 
-        <h2>5. Compliance</h2>
-        <p>This policy complies with the Google Chrome Web Store Developer Program Policies regarding User Data.</p>
+            <h2>5. Compliance</h2>
+            <p>This policy complies with the Google Chrome Web Store Developer Program Policies regarding User Data.</p>
+        </div>
 
         <footer>
-            <p>&copy; 2026 Michael & Co. Built with privacy in mind.</p>
+            <p>&copy; 2026 Michael & Co. Built for Privacy.</p>
         </footer>
     </div>
+
 </body>
+
 </html>

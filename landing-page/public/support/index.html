@@ -1,91 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support - Local AI</title>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Outfit:wght@600;800&display=swap"
+        rel="stylesheet">
+
     <style>
         :root {
-            --primary: #2563eb;
-            --bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
+            --bg: #05070a;
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --primary: #3b82f6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
-        body { font-family: 'Inter', sans-serif; margin: 0; color: var(--text-main); line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
-        
-        nav { padding: 1.5rem 0; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
-        .logo { font-weight: 800; font-size: 1.25rem; color: var(--primary); text-decoration: none; }
-        .nav-links a { margin-left: 1.5rem; color: var(--text-muted); text-decoration: none; font-weight: 500; }
-        .nav-links a:hover { color: var(--primary); }
 
-        h1 { font-size: 2.5rem; margin-top: 3rem; }
-        h2 { margin-top: 2rem; }
-        p { color: var(--text-muted); }
-        
-        .faq-item { margin-bottom: 1.5rem; border: 1px solid var(--border); padding: 1.5rem; border-radius: 8px; }
-        .faq-question { font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(rgba(5, 7, 10, 0.9), rgba(5, 7, 10, 0.9)),
+                url('/assets/ai_hero.png');
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            color: white;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Navbar */
+        nav {
+            padding: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Content Area */
+        .content-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            padding: 3rem;
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            margin-bottom: 4rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            margin-top: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .faq-item {
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .faq-question {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: white;
+            font-size: 1.1rem;
+        }
+
         .btn-coffee {
             display: inline-block;
             background: #FFDD00;
             color: #000;
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
             text-decoration: none;
             font-weight: 600;
-            margin-top: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .btn-coffee:hover {
+            transform: scale(1.05);
+        }
+
+        footer {
+            padding: 4rem 0;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
+
 <body>
+
     <div class="container">
         <nav>
-            <a href="/" class="logo">⚡ Local AI</a>
+            <a href="/" class="logo">Local AI</a>
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="https://github.com/valentinfomin/ai-spellchecker">GitHub</a>
             </div>
         </nav>
 
-        <h1>Support & FAQ</h1>
-        <p>Need help with Local AI? Check the common issues below or reach out.</p>
+        <div class="content-card">
+            <h1>Support & FAQ</h1>
+            <p>Need help with Local AI? Check the common issues below or reach out on GitHub.</p>
 
-        <h2>Common Issues</h2>
-        
-        <div class="faq-item">
-            <div class="faq-question">❌ Error: WebGPU Context Lost</div>
-            <p>This happens if your browser's graphics process crashes. To fix it, try closing and reopening the Side Panel. If that fails, restart your browser.</p>
+            <h2>Common Issues</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">❌ Error: WebGPU Context Lost</div>
+                <p>This happens if your browser's graphics process crashes. To fix it, try closing and reopening the
+                    Side Panel. If that fails, restart your browser.</p>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">❌ Model not loaded</div>
+                <p>Make sure you clicked "Download & Load Model" in the side panel. The model files are large (~2GB) and
+                    need to finish downloading before use.</p>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">⚠️ Brave Browser Issues</div>
+                <p>Brave disables WebGPU by default. Go to <code>brave://flags</code> and enable "WebGPU Developer
+                    Features", then enable "Graphics Acceleration" in Settings.</p>
+            </div>
+
+            <h2>Contact</h2>
+            <p>Found a bug? Please open an issue on our GitHub repository.</p>
+            <p><a href="https://github.com/valentinfomin/ai-spellchecker/issues"
+                    style="color:var(--primary); text-decoration: none; font-weight: 600;">Report an Issue on GitHub
+                    &rarr;</a></p>
+
+            <h2 style="margin-top: 4rem;">Support the Project</h2>
+            <p>Local AI is free and open source. If you find it useful, consider supporting development!</p>
+            <a href="https://www.buymeacoffee.com/watchdogalert" class="btn-coffee" target="_blank">☕ Buy me a
+                coffee</a>
         </div>
 
-        <div class="faq-item">
-            <div class="faq-question">❌ Model not loaded</div>
-            <p>Make sure you clicked "Download & Load Model" in the side panel. The model files are large (~2GB) and need to finish downloading before use.</p>
-        </div>
-
-        <div class="faq-item">
-            <div class="faq-question">⚠️ Brave Browser Issues</div>
-            <p>Brave disables WebGPU by default. Go to <code>brave://flags</code> and enable "WebGPU Developer Features", then enable "Graphics Acceleration" in Settings.</p>
-        </div>
-
-        <h2>Contact</h2>
-        <p>Found a bug? Please open an issue on our GitHub repository.</p>
-        <p><a href="https://github.com/valentinfomin/ai-spellchecker/issues">Report an Issue on GitHub &rarr;</a></p>
-
-        <hr style="margin: 3rem 0; border: 0; border-top: 1px solid var(--border);">
-
-        <h2>Support the Project</h2>
-        <p>Local AI is free and open source. If you find it useful, consider buying me a coffee to support development!</p>
-        <a href="https://www.buymeacoffee.com/watchdogalert" class="btn-coffee" target="_blank">☕ Buy me a coffee</a>
-        
-        <br><br><br>
-        <footer style="margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); text-align: center; font-size: 0.9rem; color: var(--text-muted);">
-            <p>&copy; 2026 Michael & Co &bull; <a href="/privacypolicy.html" style="color: var(--text-muted); text-decoration: underline;">Privacy Policy</a></p>
+        <footer>
+            <div class="copyright">Built for privacy by Michael & Co. &copy; 2026</div>
+            <div class="footer-links">
+                <a href="/privacypolicy.html">Privacy Policy</a>
+            </div>
         </footer>
     </div>
+
 </body>
+
 </html>
